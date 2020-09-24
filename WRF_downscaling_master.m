@@ -10,12 +10,12 @@ buffer = 16000; % size of buffer around each chunk (m)
 window = 7; % number of WRF grid cells to use for lapse rate downscaling
 
 % directories
-mdir = '/Volumes/WDPassport/'; % master directory
-wrfhdir = ; % hourly WRF data
-wrfmdir = [mdir,'DATA/WRF/Monthly_means/']; % monthly WRF data
-outdir = [mdir,'DATA/WRF/Downscaled/']; % output directory for downscaled data
-inDEM = ; % filename for 4km WRF DEM
-outDEM = [mdir,'DATA/DEM/NED/',num2str(outSR),'m/WUS_NED_',num2str(outSR),'m.mat']; % filename for fine resolution DEM
+mdir = '/home/abby/'; % master directory
+wrfhdir = [mdir,'DATA/WRF/WUS_',num2str(outTR),'hr/']; % hourly WRF data
+wrfmdir = [mdir,'DATA/WRF/monthly_means/']; % monthly WRF data
+outdir = [mdir,'DATA/WRF/downscaled/']; % output directory for downscaled data
+inDEM = [wrfhdir,'lon_lat_hgt_trimmed.mat']; % filename for 4km WRF DEM
+outDEM = [wrfhdir,'WUS_NED_',num2str(outSR),'m.mat']; % filename for fine resolution DEM
 addpath([outdir,'Code/'])
 
 
@@ -36,7 +36,7 @@ for ch = 1:nchunk
 
 % - downscale outTR hourly datasets for all variables except solar, save
 
-    downscale_WRF_lapse_rates(ch, outDEM, outSR, outTR, window, outdir, wrfhdir, wrfmdir)
+    downscale_WRF_lapse_rates(ch, inDEM, outDEM, outSR, outTR, window, outdir, wrfhdir, wrfmdir)
 
     
 % - in R, run solar terrain correction script, save
