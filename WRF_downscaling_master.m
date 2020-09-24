@@ -36,7 +36,7 @@ for ch = 1:nchunk
 
 % - downscale outTR hourly datasets for all variables except solar, save
 
-    downscale_WRF_lapse_rates(ch, outDEM, outSR, outTR, window, outdir, wrfhdir, wrfmdir)
+    downscale_WRF_lapse_rates(ch, inDEM, outDEM, outSR, outTR, window, outdir, wrfhdir, wrfmdir)
 
     
 % - in R, run solar terrain correction script, save
