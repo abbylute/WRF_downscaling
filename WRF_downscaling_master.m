@@ -3,8 +3,10 @@
 % parameters
 outTR = 4; % output temporal resolution (hrs)
 outSR = 210; % output spatial resolution (m)
-chunksize = outSR*100; % chunk size without buffer (m). should be a multiple of outSR.
-buffer = 12000; % size of buffer around each chunk (m)
+chunksize = outSR*500; % chunk size without buffer (m). should be a multiple of outSR.
+buffer = 16000; % size of buffer around each chunk (m)
+    % buffer should allow > than (window-1)/2 WRF grid cells to be
+    % available on all sides for lapse rate calculations
 window = 7; % number of WRF grid cells to use for lapse rate downscaling
 
 % directories
@@ -16,11 +18,14 @@ inDEM = ; % filename for 4km WRF DEM
 outDEM = [mdir,'DATA/DEM/NED/',num2str(outSR),'m/WUS_NED_',num2str(outSR),'m.mat']; % filename for fine resolution DEM
 addpath([outdir,'Code/'])
 
+
 %% Define spatial chunks
+
 define_spatial_chunks(outDEM, outSR, chunksize, buffer, outdir)
 
 
 %% For each spatial chunk,
+
 load([outdir,'chunk_coordinates.mat']);
 nchunk = size(chunk_coords.st_col,2);
 

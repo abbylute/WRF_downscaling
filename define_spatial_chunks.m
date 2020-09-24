@@ -39,7 +39,7 @@ en_col = min(en_col, size(lonfine,2));
 en_row_buf = min(en_row_buf, size(lonfine,1));
 en_col_buf = min(en_col_buf, size(lonfine,2)); 
 st_row = max(st_row, 1);
-st_col = max(st_row, 1);
+st_col = max(st_col, 1);
 st_row_buf = max(st_row_buf, 1);
 st_col_buf = max(st_col_buf, 1);
 

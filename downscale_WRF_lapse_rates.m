@@ -69,7 +69,7 @@ function[] = downscale_WRF_lapse_rates(ch, outDEM, outSR, outTR, window, outdir,
     yrmonth = [2000*ones(3,1) (10:12)';
         repelem((2001:2012)',12) repmat((1:12)',12,1);
         2013*ones(9,1) (1:9)'];
-    filestym = yrmonth(1:3,size(yrmonth,1),:);
+    filestym = yrmonth(1:3:size(yrmonth,1),:);
     fileenym = yrmonth(3:3:size(yrmonth,1),:);
     cal = datevec(datetime(2000,10,1,0,0,0):hours(1):datetime(2013,9,30,23,0,0));
     calout = cal(1:outTR:size(cal,1),:);
@@ -157,9 +157,9 @@ function[] = downscale_WRF_lapse_rates(ch, outDEM, outSR, outTR, window, outdir,
                 enym = [num2str(fileenym(tt,1)), char(sprintfc('%02i',fileenym(tt,2)))];
                 filenm = [wrfhdir,char(varnms(vv)),'/wrf2d_d01_CTRL_',char(varnms(vv)),'_',stym,'-',enym,'.nc'];
                 
-                ym = find(yrmonth(:,1) == filestym(tt,1) & ismember(yrmonth(:,2), filestym(tt,2):fileenym(tt,2)));
+                %ym = find(yrmonth(:,1) == filestym(tt,1) & ismember(yrmonth(:,2), filestym(tt,2):fileenym(tt,2)));
                 ymdh = find(cal(:,1) == filestym(tt,1) & ismember(cal(:,2), filestym(tt,2):fileenym(tt,2)));
-                ymdh_grp = findgroups(cal(ymdh,2));
+                %ymdh_grp = findgroups(cal(ymdh,2));
                 
                 ncid = netcdf.open(filenm);
                 datall = squeeze(netcdf.getVar(ncid, 0, [wrfminrow, wrfmincol, 0], [wrfmaxrow, wrfmaxcol, size(ymdh,1)]));
