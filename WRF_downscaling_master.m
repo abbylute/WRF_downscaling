@@ -13,10 +13,10 @@ window = 7; % number of WRF grid cells to use for lapse rate downscaling
 mdir = '/home/abby/'; % master directory
 wrfhdir = [mdir,'DATA/WRF/WUS_',num2str(outTR),'hr/']; % hourly WRF data
 wrfmdir = [mdir,'DATA/WRF/monthly_means/']; % monthly WRF data
-outdir = [mdir,'DATA/WRF/downscaled/']; % output directory for downscaled data
+outdir = [mdir,'DATA/WRF/downscaled/WUS/']; % output directory for downscaled data
 inDEM = [wrfhdir,'lon_lat_hgt_trimmed.mat']; % filename for 4km WRF DEM
 outDEM = [wrfhdir,'WUS_NED_',num2str(outSR),'m.mat']; % filename for fine resolution DEM
-addpath([outdir,'Code/'])
+addpath([mdir,'DATA/WRF/downscaled/Code/'])
 
 
 %% Define spatial chunks
