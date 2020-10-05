@@ -1,4 +1,4 @@
-function[] = define_spatial_chunks(outDEM, outSR, chunksize, buffer, outdir)
+function[] = define_spatial_chunks(outDEM, outSR, chunksize, buffer, outdir, us_latlon)
 
 % inDEM = matfile of lon, lat, elev for WRF
 % outDEM = matfile of lon, lat, elev for the finer resolution output DEM
@@ -6,6 +6,10 @@ function[] = define_spatial_chunks(outDEM, outSR, chunksize, buffer, outdir)
 % chunksize = size of spatial chunks (m), without buffer
 % buffer = size of buffer around each chunk (m)
 % outdir = directory for saving chunk data
+% us_latlon = location of US latlon coordinates
+
+% load US outline
+us = matfile(us_latlon);
 
 % ncell on chunk side
 window = chunksize/outSR;
@@ -17,9 +21,6 @@ lonfine = m.lon;
 latfine = m.lat;
 elevfine = m.elev;
 clear m
-
-%nchunk_horz = ceiling(size(lonfine,2)/window);
-%nchunk_vert = ceiling(size(lonfine,1)/window);
 
 % define coordinates for each chunk
 st_row = 1:window:size(lonfine,1);
@@ -43,11 +44,22 @@ st_col = max(st_col, 1);
 st_row_buf = max(st_row_buf, 1);
 st_col_buf = max(st_col_buf, 1);
 
+% Visualize chunks
+imAlpha = ones(size(elevfine));
+imAlpha(isnan(elevfine))=0;
+figure(1);clf;
+imagesc(elevfine, 'AlphaData',imAlpha); 
+colorbar(); hold on;
+plot(reshape(repelem(st_col,2),2,length(st_col)), [min(st_row), max(en_row)], 'k');
+plot([min(st_col), max(en_col)], reshape(repelem(st_row,2),2,length(st_row)), 'k');
+title(['chunk map. chunksize = ',num2str(chunksize/1000),'km. # chunks = ',num2str(length(st_col)*length(st_row)),'.']);
+print([outdir,'chunks/chunk_map.png'],'-dpng','-r300');
+
 
 nr = length(st_row);
 nc = length(st_col);
 
-% replicate so that their are coords for each chunk
+% replicate so that there are coords for each chunk
 st_row = repelem(st_row, nc);
 en_row = repelem(en_row, nc);
 st_row_buf = repelem(st_row_buf, nc);
@@ -58,8 +70,44 @@ st_col_buf = repmat(st_col_buf,1,nr);
 en_col_buf = repmat(en_col_buf,1,nr);
 
 
+% Identify chunks that are completely outside of US
+us = matfile(us_latlon);
+
+for ii = 1:size(st_row,2)
+    ilat = latfine(st_row(ii):en_row(ii),st_col(ii):en_col(ii));
+    ilon = lonfine(st_row(ii):en_row(ii),st_col(ii):en_col(ii));
+    s2 = size(ilat,2);
+    s1 = size(ilat,1);
+    % test outer points first to save time
+    % this should be sufficient, especially if we decrease chunk sizes
+    in = inpolygon(ilon([1,s1],[1,s2]),ilat([1,s1],[1,s2]),us.us_lon,us.us_lat);
+    %%%%if in == 1
+       % in_us(ii) = true;
+    %else
+    %    in = inpolygon(ilon,ilat,us.us_lon,us.us_lat); % this takes
+    %    forever
+        in_us(ii) = sum((sum(in))) > 0;
+    %end
+end
+p = in_us ==0;
+plot((st_col(p)+en_col(p))./2, (st_row(p)+en_row(p))./2, '.r','MarkerSize',20);
+clear ilat ilon s2 s1 in
+
+
+imAlpha = ones(size(elevfine));
+imAlpha(isnan(elevfine))=0;
+figure(1);clf;
+imagesc(elevfine, 'AlphaData',imAlpha); 
+colorbar(); hold on;
+plot(reshape(repelem(st_col,2),2,length(st_col)), [min(st_row), max(en_row)], 'k');
+plot([min(st_col), max(en_col)], reshape(repelem(st_row,2),2,length(st_row)), 'k');
+title(['chunk map. chunksize = ',num2str(chunksize/1000),'km. # chunks = ',num2str(size(st_col,2)),'.']);
+plot((st_col(de)+en_col(de))./2, (st_row(de)+en_row(de))./2, '.y','MarkerSize',20);
+
+
 
 % save outputs
+%----------------------------------------
 chunk_coords = struct();
 chunk_coords.st_row = st_row;
 chunk_coords.en_row = en_row;
@@ -69,33 +117,7 @@ chunk_coords.st_row_buf = st_row_buf;
 chunk_coords.en_row_buf = en_row_buf;
 chunk_coords.st_col_buf = st_col_buf;
 chunk_coords.en_col_buf = en_col_buf;
-save([outdir,'chunk_coordinates.mat'], 'chunk_coords');
-
-% alternatively, don't save as a structure
-%save([outdir,'chunk_coordinates.mat'],...
-%    'st_row','en_row','st_col','en_col',...
-%    'st_row_buf','en_row_buf','st_col_buf','en_col_buf');
-
-
-
-
-
-
-% DO WE WANT TO SAVE FINE AND COARSE MINI DEMS FOR EACH CHUNK? 
-% OR MAYBE JUST INFO ABOUT HOW TO EXTRACT THEM?
-
-%chunknum = 0;
-%for rr = 1:nchunk_vert    
-%    for cc = 1:nchunk_horz
-%        chunknum = chunknum +1;
-%        
-%        % does a directory exist for this chunk? if not make it
-%        
-%        
-%    end % end cols
-%end % end rows
-
-
-
+chunk_coords.in_us = in_us;
+save([outdir,'chunks/chunk_coordinates.mat'], 'chunk_coords');
 
 end
