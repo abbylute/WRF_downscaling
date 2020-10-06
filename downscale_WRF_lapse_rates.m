@@ -1,17 +1,31 @@
-function[] = downscale_WRF_lapse_rates(ch, inDEM, outDEM, outTR, window, outdir, wrfhdir, wrfmdir, prismppt, era)
+function[] = downscale_WRF_lapse_rates(ch, outSR, inDEM, outDEM, outTR, window, outdir, wrfhdir, wrfmdir, prismppt, era, resname)
 
 % ch = chunk number to run
-% outDEM =  filename for fine resolution DEM
+% outSR = spatial resolution to downscale to (m)
+% inDEM = original WRF DEM
+% outDEM =  filename for DEM to downscale to
 % outTR = output temporal resolution (hrs)
 % window = number of WRF grid cells to use for lapse rate downscaling
 % outdir = output directory for downscaled data
 % wrfhdir = hourly WRF data
 % wrfmdir = monthly WRF data
-% prismppt = filenames for PRISM ppttt to use for bias correction
+% prismppt = filenames for PRISM ppt to use for bias correction
 % era = CTRL or PGW
+% resname = 'fine' or 'coarse'
 
-    chunks = matfile([outdir,'chunks/chunk_coordinates.mat']); chunks = chunks.chunk_coords;
-    varnms = {'ACLWDNB','PREC_ACC_NC','PSFC','Q2','WIND'};
+    chunks = matfile([outdir,'chunks/chunk_coordinates_',num2str(outSR),'m.mat']); chunks = chunks.chunk_coords;
+    pts_to_model = matfile([outdir,'chunks/points_to_model_chunk_',num2str(ch),'.mat']);
+    if isequal(resname,'fine')
+        outlon = pts_to_model.outlonf;
+        outlat = pts_to_model.outlatf;
+    elseif isequal(resname,'coarse')
+        outlon = pts_to_model.outlonc;
+        outlat = pts_to_model.outlatc;
+    else
+        error('argument resname is invalid. should be fine or coarse');
+    end
+    
+    varnms = {'ACLWDNB','PREC_ACC_NC','Q2','WIND'};
     
     side = (window-1)/2;
     nmonths = 156;
@@ -30,6 +44,9 @@ function[] = downscale_WRF_lapse_rates(ch, inDEM, outDEM, outTR, window, outdir,
                         
     xout = reshape(hilon, size(hilon,1)*size(hilon,2),1);
     yout = reshape(hilat, size(hilat,1)*size(hilat,2),1);
+    
+    hilonl = reshape(hilon, size(hilon,1)*size(hilon,2),1);
+    hilatl = reshape(hilat, size(hilat,1)*size(hilat,2),1);
 
     hilonb = hidem.lon(chunks.st_row_buf(ch):chunks.en_row_buf(ch), chunks.st_col_buf(ch):chunks.en_col_buf(ch));
     hilatb = hidem.lat(chunks.st_row_buf(ch):chunks.en_row_buf(ch), chunks.st_col_buf(ch):chunks.en_col_buf(ch));
@@ -115,11 +132,8 @@ for vv = 1:length(varnms)
             clear wrfppt plonlat prism F mm
         elseif vv == 3
             mon = matfile([wrfmdir,char(varnms(vv)),'_',era,'.mat']);
-            mon = mon.psfc_monthly(130:600,290:830,:);
-        elseif vv == 4
-            mon = matfile([wrfmdir,char(varnms(vv)),'_',era,'.mat']);
             mon = squeeze(mon.QDATA(130:600,290:830,1,:));
-        elseif vv == 5
+        elseif vv == 4
             mon = matfile([wrfmdir,'vs_monthly_',era,'.mat']);
             mon = mon.vs_monthly(130:600,290:830,:);
         end
@@ -258,19 +272,28 @@ for vv = 1:length(varnms)
         clear datlong mgrp mgrpu nd mm
     end % end years
     
+    datdown = single(datdown);
+    
+    % extract points to model at
+    datdown = reshape(datdown, size(datdown,1)*size(datdown,2), size(datdown,3));
+    f = ismember([hilonl,hilatl], [outlon,outlat], 'rows');
+    datdown = datdown(f,:); % should be able to use outlon,outlat to index this
+
+    
+    % round to desired precision
+    if ismember(vv, [2,4]) % for ppt, wind
+        datdown = round(datdown, 1); % to the 10th
+    elseif ismember(vv,3) % for q2
+        datdown = round(datdown,4); % round to 10th of a gram/kg
+    elseif ismember(vv,1) % for longwave
+        datdown = round(datdown, 5, 'significant'); % 5 sig figs
+    end
+    
     % Save downscaled data
     savetime = tic;
-    save([outdir,era,'/',char(varnms(vv)),'/',char(varnms(vv)),'_',era,'_chunk',num2str(ch),'.mat'],'datdown','-v7.3');
-    %clear datdown
-    %load([outdir,era,'/',char(varnms(vv)),'/',char(varnms(vv)),'_',era,'_chunk',num2str(ch),'.mat'],'datdown');
+    save([outdir,era,'/',char(varnms(vv)),'/',char(varnms(vv)),'_',era,'_',num2str(outSR),'m_chunk',num2str(ch),'.mat'],'datdown','-v7.3');
     stoc = toc(savetime); % 81 minutes
-    %tic
-    %save([outdir,era,'/',char(varnms(vv)),'/',char(varnms(vv)),'_',era,'_chunk',num2str(ch),'.mat'],'datdown','-v6');
-    % 'Warning: Variable 'datdown' was not saved. For variables larger than
-    % 2GB use MAT-file version 7.3 or later.'
-    %clear datdown
-    %load([outdir,era,'/',char(varnms(vv)),'/',char(varnms(vv)),'_',era,'_chunk',num2str(ch),'.mat'],'datdown');
-    %toc
+
     vtoc = toc(vartime);
     disp(['running ',char(varnms(vv)),' took ',num2str(vtoc/60),' minutes.']);
     disp(['saving ',char(varnms(vv)),' took ',num2str(stoc/60),' minutes.']);
@@ -366,9 +389,73 @@ datdown = ones(size(hilon,1), size(hilon,2), size(cal,1)) * NaN;
         clear datlong lr_fine
     end % end years
     
+    datdown = single(datdown);
+
+    
+    % extract points to model at
+    datdown = reshape(datdown, size(datdown,1)*size(datdown,2), size(datdown,3));
+    f = ismember([hilonl,hilatl], [outlon,outlat], 'rows');
+    datdown = datdown(f,:); % should be able to use outlon,outlat to index this
+
+    % round to desired precision
+    datdown = round(datdown, 1); % to the 10th
+
     % Save downscaled data
     savetime = tic;
-    save([outdir,era,'/',char(varnm),'/',char(varnm),'_',era,'_chunk',num2str(ch),'.mat'],'datdown','-v7.3');
+    save([outdir,era,'/',char(varnm),'/',char(varnm),'_',era,'_',num2str(outSR),'m_chunk',num2str(ch),'.mat'],'datdown','-v7.3');
+    stoc = toc(savetime);
+    vtoc = toc(vartime);
+    disp(['running ',char(varnm),' took ',num2str(vtoc/60),' minutes.']);
+    disp(['saving ',char(varnm),' took ',num2str(stoc/60),' minutes.']);
+
+
+    
+    
+    
+    
+    
+%% Downscale PSFC    
+% compute temporal average from monthly WRF for each location
+% interpolate to output resolution
+% extract points to model at
+% output should be points x 1 (no temporal variability)
+
+    varnm = 'PSFC';
+    vartime = tic;
+
+    % preallocate output
+    datdown = ones(size(hilon,1), size(hilon,2), 1) * NaN;
+   
+    mon = matfile([wrfmdir,char(varnm),'_',era,'.mat']);
+    mon = mon.psfc_monthly(130:600,290:830,:);
+    
+    % temporal average:
+    mon = mean(mon,3);
+    
+    % trim to chunk
+    for pp = 1:nwrf
+        [rowpicks, colpicks] = find(wrflon == wrflonl(fin(pp)) & wrflat == wrflatl(fin(pp)));
+        montrim(pp,:) = mon(rowpicks,colpicks);
+    end
+
+    % interpolate to output resolution:
+    F = scatteredInterpolant(double(wrflonl(fin)), double(wrflatl(fin)), montrim);
+    datfine = F(xoutc,youtc);
+    datfine = interp2(xoutc, youtc, datfine, xout, yout);
+
+    datdown = single(datfine);
+    
+    % extract points to model at
+    datdown = reshape(datdown, size(datdown,1)*size(datdown,2), size(datdown,3));
+    f = ismember([hilonl,hilatl], [outlon,outlat], 'rows');
+    datdown = datdown(f,:); % should be able to use outlon,outlat to index this
+
+    % round to desired precision
+    datdown = round(datdown/100,1)*100; % round to 10th of hPa or mb
+    
+    % Save downscaled data
+    savetime = tic;
+    save([outdir,era,'/',char(varnm),'/',char(varnm),'_',era,'_',num2str(outSR),'m_chunk',num2str(ch),'.mat'],'datdown','-v7.3');
     stoc = toc(savetime);
     vtoc = toc(vartime);
     disp(['running ',char(varnm),' took ',num2str(vtoc/60),' minutes.']);

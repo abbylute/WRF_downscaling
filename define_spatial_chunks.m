@@ -1,6 +1,5 @@
 function[] = define_spatial_chunks(outDEM, outSR, chunksize, buffer, outdir, us_latlon)
 
-% inDEM = matfile of lon, lat, elev for WRF
 % outDEM = matfile of lon, lat, elev for the finer resolution output DEM
 % outSR = output spatial resolution (m), should match resolution of outDEM
 % chunksize = size of spatial chunks (m), without buffer
@@ -52,8 +51,8 @@ imagesc(elevfine, 'AlphaData',imAlpha);
 colorbar(); hold on;
 plot(reshape(repelem(st_col,2),2,length(st_col)), [min(st_row), max(en_row)], 'k');
 plot([min(st_col), max(en_col)], reshape(repelem(st_row,2),2,length(st_row)), 'k');
-title(['chunk map. chunksize = ',num2str(chunksize/1000),'km. # chunks = ',num2str(length(st_col)*length(st_row)),'.']);
-print([outdir,'chunks/chunk_map.png'],'-dpng','-r300');
+title([num2str(outSR),'m chunk map. chunksize = ',num2str(chunksize/1000),'km. # chunks = ',num2str(length(st_col)*length(st_row)),'.']);
+print([outdir,'chunks/chunk_map_',num2str(outSR),'m.png'],'-dpng','-r300');
 
 
 nr = length(st_row);
@@ -72,7 +71,7 @@ en_col_buf = repmat(en_col_buf,1,nr);
 
 % Identify chunks that are completely outside of US
 us = matfile(us_latlon);
-
+in_us = ones(size(st_row,2),1)*NaN;
 for ii = 1:size(st_row,2)
     ilat = latfine(st_row(ii):en_row(ii),st_col(ii):en_col(ii));
     ilon = lonfine(st_row(ii):en_row(ii),st_col(ii):en_col(ii));
@@ -94,16 +93,16 @@ plot((st_col(p)+en_col(p))./2, (st_row(p)+en_row(p))./2, '.r','MarkerSize',20);
 clear ilat ilon s2 s1 in
 
 
-imAlpha = ones(size(elevfine));
-imAlpha(isnan(elevfine))=0;
-figure(1);clf;
-imagesc(elevfine, 'AlphaData',imAlpha); 
-colorbar(); hold on;
-plot(reshape(repelem(st_col,2),2,length(st_col)), [min(st_row), max(en_row)], 'k');
-plot([min(st_col), max(en_col)], reshape(repelem(st_row,2),2,length(st_row)), 'k');
-title(['chunk map. chunksize = ',num2str(chunksize/1000),'km. # chunks = ',num2str(size(st_col,2)),'.']);
-plot((st_col(de)+en_col(de))./2, (st_row(de)+en_row(de))./2, '.y','MarkerSize',20);
-
+% Only save chunk information for chunks within US
+in_us = logical(in_us);
+st_row = st_row(in_us);
+en_row = en_row(in_us);
+st_col = st_col(in_us);
+en_col = en_col(in_us);
+st_row_buf = st_row_buf(in_us);
+en_row_buf = en_row_buf(in_us);
+st_col_buf = st_col_buf(in_us);
+en_col_buf = en_col_buf(in_us);
 
 
 % save outputs
@@ -117,7 +116,7 @@ chunk_coords.st_row_buf = st_row_buf;
 chunk_coords.en_row_buf = en_row_buf;
 chunk_coords.st_col_buf = st_col_buf;
 chunk_coords.en_col_buf = en_col_buf;
-chunk_coords.in_us = in_us;
-save([outdir,'chunks/chunk_coordinates.mat'], 'chunk_coords');
+%chunk_coords.in_us = in_us;
+save([outdir,'chunks/chunk_coordinates_',num2str(outSR),'m.mat'], 'chunk_coords');
 
 end
