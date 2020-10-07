@@ -1,25 +1,47 @@
 # Calculate solar terrain corrections for WRF data
+#paramfile <-  '/Users/abbylute/Downloads/chunk_140coarse.mat'
+
+# to run this script from command line:
+# Rscript --vanilla pathtothisRscript.R pathtoparamfile.mat
+
+# to run this script from matlab:
+#pathtoR = '/Library/Frameworks/R.framework/Resources/bin/Rscript';
+#pathtoRscript = '/Volumes/WDPassport/DATA/WRF/Downscaled/Code/get_solar_terrain_corrections.R';
+#pathtoparamfile = '/Users/abbylute/Downloads/chunk_140coarse.mat';
+#[status] = system([pathtoR,' --vanilla ',pathtoRscript,' ',pathtoparamfile]);
+
+
+  
+  args = commandArgs(trailingOnly=TRUE)
+  
+  # test if there is at least one argument: if not, return an error
+  if (length(args)==0) {
+    stop("At least one argument must be supplied (paramfile.mat)", call.=FALSE)
+  } else if (length(args)==1) {
+    # default output file
+    paramfile = args[1]
+  }
+
+  
 require(raster)
 require(insol)
 require(lutz) # for timezones
+require(R.matlab)
 #require(tidyverse)
 
 # read in parameter file
-params <- '/home/abby/DATA/WRF/xxxxxxx.csv'
+params <- readMat(paramfile)
 
 # Inputs:
-#demres = params[3,] # resolution of fine res dem (m)
-#demfn = params[4,] # fine resolution dem
-#lonlat = params[5:6,] # lon and lat to calculate corrections at
-#deltat = params[7,] # temporal resolution (hrs)
-#outfn = params[8,] # output filename
-# to try out on laptop:
-demres = 210
-demfn = '/Volumes/WDPassport/DATA/DEM/NED/210m/WUS_NED_210m.tif'
-lonlat = rbind(c(-120, 41), c(-121, 42))
-pts_to_model = lonlat; # this will be different in reality
-deltat = 4;
+ch = params$ch[1,1]
+demres = params$outSR[1,1] # resolution of fine res dem (m)
+demfn = params$outDEM[1,1] # fine resolution dem
+outlon = params$outlon[1,] # lons to save
+outlat = params$outlat[1,] # lats to save
+deltat = params$outTR[1,1] # temporal resolution (hrs)
+outfn = params$outfile[1,1] # output filename
 
+pts_to_model = matrix(c(outlon, outlat), ncol = 2); # lon and lat to save corrections at
 
 # Output:
 # a terrain correction value for each prediction point, each mid-month, each hour
@@ -33,7 +55,7 @@ solar_tc <- array(rep(NaN, nsites*12*(24/deltat)), c(nsites, 12, (24/deltat))); 
 print('preparing DEMs')
 demorig <- raster(demfn)
 buf <- .5
-demorig <- crop(demorig,c(min(lonlat[,1])-buf, max(lonlat[,1])+buf, min(lonlat[,2])-buf, max(lonlat[,2])+buf))
+demorig <- crop(demorig,c(min(pts_to_model[,1])-buf, max(pts_to_model[,1])+buf, min(pts_to_model[,2])-buf, max(pts_to_model[,2])+buf))
 demfine <- projectRaster(demorig,res=demres,crs="+proj=utm +zone=11 +ellps=WGS84 +units=m +no_defs") # zone 11 is middle of WUS
 #writeRaster(dem,paste0(demdir,demres,'m/WUS_',demres,'m_utm.tif'),overwrite=T)
 #rm(dem);gc()
@@ -64,8 +86,8 @@ year=2007 # mean year of WRF time period
 day=15
 #timeh=12
 #buf_m = 10000 # buffer in meters around each site to consider in terrain correction
-mlon = mean(lonlat[,1])
-mlat = mean(lonlat[,2])
+mlon = mean(pts_to_model[,1])
+mlat = mean(pts_to_model[,2])
 ts = seq(0,23,deltat) # time steps each day
 
 # 4. Run 'insol' solar monthly on mtn and flat dems:
@@ -127,7 +149,10 @@ for (mm in 1:12){
       crs(Irrflat) <- crs(demflat)
       extent(Irrflat) <- extent(demflat)
       
+      #Irrflat <- crop(Irrflat, extent(Irr))
+      
       Ifnew <- disaggregate(Irrflat,4000/demres)
+      Ifnew <- crop(Ifnew, extent(Irr))
   
       # calculate ratio and assign it to output
       rat <- Irr/Ifnew
@@ -141,7 +166,7 @@ for (mm in 1:12){
       # output
       solar_tc[, mm, tt] <- rat
     } # end if during daylight
-  } # end daylight hour
+  } # end timesteps
 } # end month
 
 # reshape solar_tc to be space x time
