@@ -25,7 +25,9 @@ outDEMf = [mdir,'DATA/Mapping/WUS_NED_',num2str(outSRf),'m.mat']; % filename for
 outDEMc = [mdir,'DATA/Mapping/WUS_NED_',num2str(outSRc),'m.mat']; % filename for coarse resolution output DEM
 us_latlon = [mdir,'DATA/Mapping/US_latlon.mat']; % location of US latlon
 addpath([mdir,'DATA/WRF/downscaled/Code/'])
-tmpparamfile = []; % file to store parameters temporarily for solar downscaling
+pathtoR = ; % location of R program
+solartcRscript = [mdir,'DATA/WRF/downscaled/Code/get_solar_terrain_corrections.R']; % location of R solar terrain correction script
+solarparamdir = [outdir,'solar_param_files/']; % file to store parameters temporarily for solar downscaling
 
 
 %% Define spatial chunks
@@ -53,9 +55,14 @@ for ch = 1:nchunk
     
     % downscale outTR hourly datasets dependent on spatial scale
     % only downscale at fine res
+    tic
     if (isempty(outlonc) && ~isempty(outlonf)) 
         downscale_WRF_lapse_rates(ch, outSRf, inDEM, outDEMf, outTR, window, outdir, wrfhdir, wrfmdir, prismppt, era, 'fine')
     
+        [paramfilename,tcfilename] = write_solar_paramfile(ch, inDEM, outSRf, outDEMf, outlonf, outlatf, outTR, era, solarparamdir, outdir);
+
+        [status] = system([pathtoR,' --vanilla ',solartcRscript,' ',paramfilename]);
+        
         
     % only downscale at coarse res
     elseif (~isempty(outlonc) && isempty(outlonf)) 
@@ -69,7 +76,7 @@ for ch = 1:nchunk
     else
         warning(['chunk ',num2str(ch),' did not have any points to downscale'])
     end
-
+toc
     
     
             paramtext = {ch; inDEM; outSRf; outDEMf; outlonf; outlatf; outTR;
