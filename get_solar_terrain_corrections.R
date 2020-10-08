@@ -22,6 +22,8 @@
     paramfile = args[1]
   }
 
+  # add personal package directory on thunder so that R knows where to find lutz and insol
+  .libpath("/home/abby/R/x86_64-pc-linux-gnu-library/3.6/")
   
 require(raster)
 require(insol)
