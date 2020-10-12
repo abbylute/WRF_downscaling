@@ -217,6 +217,7 @@ for vv = 1:length(varnms)
         vartime = tic;
         %--- Calculate monthly Lapse Rates for each WRF point in chunk domain ---%
         % read in monthly data and trim spatially to match trimmed hourly data
+       %tic
         if vv==1
             mon = matfile([wrfmdir,char(varnms(vv)),'_',era,'.mat']);
             mon = mon.lw_monthly(130:600,290:830,:);
@@ -246,7 +247,8 @@ for vv = 1:length(varnms)
             mon = matfile([wrfmdir,'vs_monthly_',era,'.mat']);
             mon = mon.vs_monthly(130:600,290:830,:);
         end
-        
+        %toc % 2s
+        %tic
         % preallocate
         lr = ones(nwrf, nmonths) .* NaN;
 
@@ -276,8 +278,9 @@ for vv = 1:length(varnms)
         end % end wrf points
         clear rowpicks colpicks ncell mon dat elev land X b
         %figure(1);clf;scatter(wrflonl(fin),wrflatl(fin),25,lr(:,1),'filled');colorbar();
+%toc % 2s
 
-
+%tic
         %--- Interpolate lapse rates to high resolution ---%   
         lr_fine = ones(size(hilon,1),size(hilon,2),nmonths)*NaN;
         
@@ -289,7 +292,8 @@ for vv = 1:length(varnms)
             lr_fine(:,:,mm) = reshape(lr_f, size(hilon));
         end
         clear F lr_f mm lr
-        
+       %toc % 1.5s
+       
         % if ppt, extract spatial points from correction data and
         % interpolate to output resolution
         if vv==2 
@@ -312,11 +316,13 @@ for vv = 1:length(varnms)
 
         % preallocate output
         datdown = ones(size(hilon,1), size(hilon,2), size(cal,1)) * NaN;
-        
+     %tic   
     for yy = 1:length(yrs) % for each yearly file
+        %tic
         filenm = [wrfhdir,era,'/',char(varnms(vv)),'/',char(varnms(vv)),'_',era,'_trimmed_',num2str(outTR),'hr_',num2str(yrs(yy)),'.mat'];
 
-        yrcal = cal(cal(:,1)==yrs(yy),:);
+        yrcalind = find(cal(:,1)==yrs(yy));
+        yrcal = cal(yrcalind,:);
         ymdh = find(cal(:,1) == yrs(yy));
 
         datall = matfile(filenm);
@@ -328,6 +334,7 @@ for vv = 1:length(varnms)
             datlong(ii,:) = datall((wrfrow(ii)-wrfminrow+1), (wrfcol(ii)-wrfmincol+1), :); 
         end
         clear datall ii
+        %toc %.65s
         
         % for each time step
         % - spatially interpolate hourly data
@@ -346,19 +353,27 @@ for vv = 1:length(varnms)
             end  
         end
         
+       % tic
         for tt = 1:size(datlong,2) % for each time step
             % identify month to use for lapse rates
-            mm = ymgrp(datetime(cal) == datetime(yrcal(tt,:))); % 0.0374
-
+%            tic
+           % mm = ymgrp(datetime(cal) == datetime(yrcal(tt,:))); % 0.0374
+%toc % 0.01s
+%tic
+            mm = ymgrp(yrcalind(tt)); % 0.0374
+%toc
             % interpolate raw outTR hourly data to finer spatial resolution
+            %tic
             F = scatteredInterpolant(double(wrflonl(fin)), double(wrflatl(fin)), datlong(:,tt));%.0087
             dat_f = F(xoutc,youtc); %0.661
             dat_f = interp2(xoutc, youtc, dat_f, xout,yout);
-            
+            %toc % 0.01s
             %figure(2);clf; scatter(xout, yout, 24, dat_f,'filled');colorbar();
+%tic
             dat_fine = reshape(dat_f, size(hilon));%0.0025
-
+%toc % 0.002s
             % apply bias and lapse rate corrections
+            %tic
             if vv==2 % if ppt
                 dat_fine = dat_fine .* ratppt_fine(:,:,mm);
                 nds = nd(:,mgrp(tt));
@@ -374,12 +389,17 @@ for vv = 1:length(varnms)
                 datdown(:,:,ymdh(tt)) = datdown1;
                 clear nds F lapse datdown1
             else
+             %   tic
                 datdown(:,:,ymdh(tt)) = (lr_fine(:,:,mm) .* (hielev-reshape(wrfelevfine,size(hielev)))) + dat_fine; %0.008 
+            %toc % 0.004s
             end
             clear dat_f dat_fine
+            %toc      %    0.003s
         end % end time steps
+        %toc     %10s
         clear datlong mgrp mgrpu nd mm
     end % end years
+    %toc
     
     datdown = single(datdown);
     

@@ -22,10 +22,12 @@ prismppt = [mdir,'DATA/PRISM/Monthly_ppt_4km_Oct2000_Sep2013.mat'];
 outdir = [mdir,'DATA/WRF/downscaled/WUS/']; % output directory for downscaled data
 inDEM = [wrfhdir,'lon_lat_hgt_trimmed.mat']; % filename for 4km WRF DEM
 outDEMf = [mdir,'DATA/Mapping/WUS_NED_',num2str(outSRf),'m.mat']; % filename for fine resolution output DEM
+outDEMftif = [mdir,'DATA/Mapping/WUS_NED_',num2str(outSRf),'m.tif']
 outDEMc = [mdir,'DATA/Mapping/WUS_NED_',num2str(outSRc),'m.mat']; % filename for coarse resolution output DEM
+outDEMctif = [mdir,'DATA/Mapping/WUS_NED_',num2str(outSRc),'m.tif']
 us_latlon = [mdir,'DATA/Mapping/US_latlon.mat']; % location of US latlon
 addpath([mdir,'DATA/WRF/downscaled/Code/'])
-pathtoR = ; % location of R program
+pathtoR = '/opt/modules/devel/R/3.6.0/lib64/R/bin/Rscript'; % location of R program. in R: file.path(R.home("bin"), "R")
 solartcRscript = [mdir,'DATA/WRF/downscaled/Code/get_solar_terrain_corrections.R']; % location of R solar terrain correction script
 solarparamdir = [outdir,'solar_param_files/']; % file to store parameters temporarily for solar downscaling
 
@@ -59,10 +61,13 @@ for ch = 1:nchunk
     if (isempty(outlonc) && ~isempty(outlonf)) 
         downscale_WRF_lapse_rates(ch, outSRf, inDEM, outDEMf, outTR, window, outdir, wrfhdir, wrfmdir, prismppt, era, 'fine')
     
-        [paramfilename,tcfilename] = write_solar_paramfile(ch, inDEM, outSRf, outDEMf, outlonf, outlatf, outTR, era, solarparamdir, outdir);
-
+        %outlonf = outlonf(1:100); outlatf = outlatf(1:100);
+        [paramfilename,tcfilename] = write_solar_paramfile(ch, inDEM, outSRf, outDEMftif, outlonf, outlatf, outTR, era, solarparamdir, outdir);
+        [paramfilename,tcfilename] = write_solar_paramfile(ch, inDEM, outSRc, outDEMctif, outlonc, outlatc, outTR, era, solarparamdir, outdir);
+%system('chmod ugo+rwx /home/abby/DATA/WRF/downscaled/WUS/solar_param_files/chunk_140coarse.mat');
         [status] = system([pathtoR,' --vanilla ',solartcRscript,' ',paramfilename]);
-        
+        % to install mising packages, use xquartz logged into thunder as 
+        % abby, open R (module load R R) then install packages.
         
     % only downscale at coarse res
     elseif (~isempty(outlonc) && isempty(outlonf)) 
@@ -79,22 +84,7 @@ for ch = 1:nchunk
 toc
     
     
-            paramtext = {ch; inDEM; outSRf; outDEMf; outlonf; outlatf; outTR;
-                [outdir,era,'/ADSWDNB/solartc_',era,'_chunk',num2str(ch),'_fine.mat']};
-        csvwrite(outputfilename, paramtext);
 
-    % - calculate solar terrain corrections in R, save
-    % write a text file to say what chunk we're on, where to find the datasets,
-    % where to output them. Have teh R script read in this text file
-    paramtext = {ch;
-                inDEM;
-                outDEMf;
-                outDEMc;
-                [outdir,'chunks/points_to_model_chunk_',num2str(ch),'.mat'];
-                [outdir,era,'/ADSWDNB/solartc_',era,'_chunk',num2str(ch),'.mat']};
-    csvwrite(outputfilename, paramtext);
-    % call the R script
-    !R CMD BATCH path2Rscript.r
 
 % - downscale solar using terrain corrections, save
 

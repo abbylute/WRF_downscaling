@@ -1,6 +1,6 @@
 function[paramfilename, tcfilename] = write_solar_paramfile(ch, inDEM, outSR, outDEM, outlon, outlat, outTR, era, solarparamdir, outdir)
 
-tcfilename = [outdir,era,'/ADSWDNB/solartc_',era,'_',num2str(outSR),'m_chunk',num2str(ch),'.mat'];
+tcfilename = [outdir,era,'/ACSWDNB/solartc_',era,'_',num2str(outSR),'m_chunk',num2str(ch),'.mat'];
 
 paramtext = struct();
 paramtext.ch=ch; 
