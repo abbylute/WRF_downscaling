@@ -55,6 +55,7 @@ solar_tc <- array(rep(NaN, nsites*12*(24/deltat)), c(nsites, 12, (24/deltat))); 
 # 1. prepare mountainous DEM:
 #-------------------------
 print('preparing DEMs')
+packageVersion('raster')
 demorig <- raster(demfn)
 print('read demfn ok')
 buf <- .5
