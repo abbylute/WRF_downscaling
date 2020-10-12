@@ -57,6 +57,7 @@ solar_tc <- array(rep(NaN, nsites*12*(24/deltat)), c(nsites, 12, (24/deltat))); 
 print('preparing DEMs')
 packageVersion('raster')
 file.exists(demfn)
+file.access(demfn,4)
 demorig <- raster(demfn)
 print('read demfn ok')
 buf <- .5
