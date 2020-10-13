@@ -30,6 +30,7 @@ require(insol)
 require(lutz) # for timezones
 require(R.matlab)
 require(Rcpp)
+require(rgdal)
 #require(tidyverse)
 
 # read in parameter file
