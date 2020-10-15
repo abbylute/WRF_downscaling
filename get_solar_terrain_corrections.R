@@ -22,9 +22,7 @@
     paramfile = args[1]
   }
 
-  # add personal package directory on thunder so that R knows where to find lutz and insol
- # .libPaths("/home/abby/R/x86_64-pc-linux-gnu-library/3.6/")
- 
+# so that rgdal will load:
   dyn.load("/opt/modules/climatology/gdal/3.0.2/lib/libgdal.so")
   
 require(raster)
@@ -33,7 +31,9 @@ require(lutz) # for timezones
 require(R.matlab)
 require(Rcpp)
 require(rgdal)
-#require(tidyverse)
+
+  # to install additional package to use in R from Matlab on thunder, log onto 
+  # matlabuser on thunder, module load R, R, install.packages("package")
 
 # read in parameter file
 params <- readMat(paramfile)
