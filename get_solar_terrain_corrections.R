@@ -30,6 +30,7 @@ require(insol)
 require(lutz) # for timezones
 require(R.matlab)
 require(Rcpp)
+  dyn.load("/opt/modules/climatology/gdal/3.0.2/lib/libgdal.so")
 require(rgdal)
 #require(tidyverse)
 
