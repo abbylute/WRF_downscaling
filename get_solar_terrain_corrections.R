@@ -23,7 +23,7 @@
   }
 
   # add personal package directory on thunder so that R knows where to find lutz and insol
-  .libPaths("/home/abby/R/x86_64-pc-linux-gnu-library/3.6/")
+ # .libPaths("/home/abby/R/x86_64-pc-linux-gnu-library/3.6/")
  
   dyn.load("/opt/modules/climatology/gdal/3.0.2/lib/libgdal.so")
   
