@@ -59,11 +59,7 @@ solar_tc <- array(rep(NaN, nsites*12*(24/deltat)), c(nsites, 12, (24/deltat))); 
 # 1. prepare mountainous DEM:
 #-------------------------
 print('preparing DEMs')
-packageVersion('raster')
-file.exists(demfn)
-file.access(demfn,4)
 demorig <- raster(demfn)
-print('read demfn ok')
 buf <- .5
 demorig <- crop(demorig,c(min(pts_to_model[,1])-buf, max(pts_to_model[,1])+buf, min(pts_to_model[,2])-buf, max(pts_to_model[,2])+buf))
 demfine <- projectRaster(demorig,res=demres,crs="+proj=utm +zone=11 +ellps=WGS84 +units=m +no_defs") # zone 11 is middle of WUS
