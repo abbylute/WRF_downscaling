@@ -42,8 +42,8 @@ params <- readMat(paramfile)
 ch = params$ch[1,1]
 demres = params$outSR[1,1] # resolution of fine res dem (m)
 demfn = params$outDEM[1,1] # fine resolution dem
-outlon = params$outlon[1,] # lons to save
-outlat = params$outlat[1,] # lats to save
+outlon = params$outlon # lons to save
+outlat = params$outlat # lats to save
 deltat = params$outTR[1,1] # temporal resolution (hrs)
 outfn = params$outfile[1,1] # output filename
 
@@ -58,7 +58,6 @@ solar_tc <- array(rep(NaN, nsites*12*(24/deltat)), c(nsites, 12, (24/deltat))); 
 
 # 1. prepare mountainous DEM:
 #-------------------------
-print('preparing DEMs')
 demorig <- raster(demfn)
 buf <- .5
 demorig <- crop(demorig,c(min(pts_to_model[,1])-buf, max(pts_to_model[,1])+buf, min(pts_to_model[,2])-buf, max(pts_to_model[,2])+buf))
