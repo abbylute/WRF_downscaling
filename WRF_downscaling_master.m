@@ -22,9 +22,9 @@ prismppt = [mdir,'DATA/PRISM/Monthly_ppt_4km_Oct2000_Sep2013.mat'];
 outdir = [mdir,'DATA/WRF/downscaled/WUS/']; % output directory for downscaled data
 inDEM = [wrfhdir,'lon_lat_hgt_trimmed.mat']; % filename for 4km WRF DEM
 outDEMf = [mdir,'DATA/Mapping/WUS_NED_',num2str(outSRf),'m.mat']; % filename for fine resolution output DEM
-outDEMftif = [mdir,'DATA/Mapping/WUS_NED_',num2str(outSRf),'m.tif']
+outDEMftif = [mdir,'DATA/Mapping/WUS_NED_',num2str(outSRf),'m.tif'];
 outDEMc = [mdir,'DATA/Mapping/WUS_NED_',num2str(outSRc),'m.mat']; % filename for coarse resolution output DEM
-outDEMctif = [mdir,'DATA/Mapping/WUS_NED_',num2str(outSRc),'m.tif']
+outDEMctif = [mdir,'DATA/Mapping/WUS_NED_',num2str(outSRc),'m.tif'];
 us_latlon = [mdir,'DATA/Mapping/US_latlon.mat']; % location of US latlon
 addpath([mdir,'DATA/WRF/downscaled/Code/'])
 pathtoR = '/opt/modules/devel/R/3.6.0/lib64/R/bin/Rscript'; % location of R program. in R: file.path(R.home("bin"), "R")
@@ -45,7 +45,6 @@ define_spatial_chunks(outDEMc, outSRc, chunksize, buffer, outdir, us_latlon)
 
 finechunks = matfile([outdir,'chunks/chunk_coordinates_',num2str(outSRf),'m.mat']);
 finechunks = finechunks.chunk_coords;
-%coarsechunks = matfile([outdir,'chunks/chunk_coordinates_',num2str(outSRc),'m.mat']);
 nchunk = size(finechunks.st_col,2);
 
 for ch = 1:nchunk
@@ -56,37 +55,25 @@ for ch = 1:nchunk
     
     
     % downscale outTR hourly datasets dependent on spatial scale
+    
     % only downscale at fine res
     tic
     if (isempty(outlonc) && ~isempty(outlonf)) 
-        downscale_WRF_lapse_rates(ch, outSRf, inDEM, outDEMf, outTR, window, outdir, wrfhdir, wrfmdir, prismppt, era, 'fine')
-    
-        %outlonf = outlonf(1:100); outlatf = outlatf(1:100);
-        [paramfilename,tcfilename] = write_solar_paramfile(ch, inDEM, outSRf, outDEMftif, outlonf, outlatf, outTR, era, solarparamdir, outdir);
-        [paramfilename,tcfilename] = write_solar_paramfile(ch, inDEM, outSRc, outDEMctif, outlonc, outlatc, outTR, era, solarparamdir, outdir);
-%system('chmod ugo+rwx /home/abby/DATA/WRF/downscaled/WUS/solar_param_files/chunk_140coarse.mat');
-        [status] = system([pathtoR,' --vanilla ',solartcRscript,' ',paramfilename]);
-        % to install mising packages, use xquartz logged into thunder as 
-        % abby, open R (module load R R) then install packages.
-        
+        downscale_WRF_lapse_rates(ch, outSRf, inDEM, outDEMf, outDEMftif, outTR, window, outdir, wrfhdir, wrfmdir, prismppt, era, 'fine', solarparamdir, pathtoR, solartcRscript)
+            
     % only downscale at coarse res
     elseif (~isempty(outlonc) && isempty(outlonf)) 
-        downscale_WRF_lapse_rates(ch, outSRc, inDEM, outDEMc, outTR, window, outdir, wrfhdir, wrfmdir, prismppt, era, 'coarse')
-        
-        
+        downscale_WRF_lapse_rates(ch, outSRc, inDEM, outDEMc, outDEMctif, outTR, window, outdir, wrfhdir, wrfmdir, prismppt, era, 'coarse', solarparamdir, pathtoR, solartcRscript)    
+
     % downscale at both res    
     elseif (~isempty(outlonc) && ~isempty(outlonf)) 
-        downscale_WRF_lapse_rates(ch, outSRf, inDEM, outDEMf, outTR, window, outdir, wrfhdir, wrfmdir, prismppt, era, 'fine')
-        downscale_WRF_lapse_rates(ch, outSRc, inDEM, outDEMc, outTR, window, outdir, wrfhdir, wrfmdir, prismppt, era, 'coarse')
+        downscale_WRF_lapse_rates(ch, outSRf, inDEM, outDEMf, outDEMftif, outTR, window, outdir, wrfhdir, wrfmdir, prismppt, era, 'fine', solarparamdir, pathtoR, solartcRscript)
+        downscale_WRF_lapse_rates(ch, outSRc, inDEM, outDEMc, outDEMctif, outTR, window, outdir, wrfhdir, wrfmdir, prismppt, era, 'coarse', solarparamdir, pathtoR, solartcRscript)
+        
     else
         warning(['chunk ',num2str(ch),' did not have any points to downscale'])
     end
-toc
-    
-    
-
-
-% - downscale solar using terrain corrections, save
+    toc
 
 
 end
