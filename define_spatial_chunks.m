@@ -75,11 +75,19 @@ in_us = ones(size(st_row,2),1)*NaN;
 for ii = 1:size(st_row,2)
     ilat = latfine(st_row(ii):en_row(ii),st_col(ii):en_col(ii));
     ilon = lonfine(st_row(ii):en_row(ii),st_col(ii):en_col(ii));
-    s2 = size(ilat,2);
-    s1 = size(ilat,1);
+    %s2 = size(ilat,2);
+    %s1 = size(ilat,1);
     % test outer points first to save time
     % this should be sufficient, especially if we decrease chunk sizes
-    in = inpolygon(ilon([1,s1],[1,s2]),ilat([1,s1],[1,s2]),us.us_lon,us.us_lat);
+    %in = inpolygon(ilon([1,s1],[1,s2]),ilat([1,s1],[1,s2]),us.us_lon,us.us_lat);
+    % test outer sides to save time
+    %lons = [ilon(1,:):ilon(end,:),ilon(:,1)':ilon(:,end)'];
+    %lats = [ilat(1,:),ilat(end,:),ilat(:,1)',ilat(:,end)'];
+    % check at regular intervals along each side of the chunk
+    lons=[ilon(1,1:100:end), ilon(end,1:100:end), ilon(1:100:end,1)', ilon(1:100:end,end)', ilon(end,end)];
+    lats=[ilat(1,1:100:end), ilat(end,1:100:end), ilat(1:100:end,1)', ilat(1:100:end,end)', ilat(end,end)];
+ 
+    in = inpolygon(lons,lats,us.us_lon,us.us_lat);
     %%%%if in == 1
        % in_us(ii) = true;
     %else
