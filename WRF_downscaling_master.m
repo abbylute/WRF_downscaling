@@ -4,7 +4,7 @@
 outTR = 4; % output temporal resolution (hrs)
 outSRf = 210; % fine output spatial resolution (m)
 outSRc = 1050; % coarse output spatial resolution (m)
-chunksize = outSRf*400; % chunk size without buffer (m). should be a multiple of outSR.
+chunksize = outSRf*200; % chunk size without buffer (m). should be a multiple of outSR.
 buffer = 16000; % size of buffer around each chunk (m)
     % buffer should allow > than (window-1)/2 WRF grid cells to be
     % available on all sides for lapse rate calculations
@@ -40,7 +40,7 @@ solarparamdir = [outdir,'solar_param_files/']; % file to store parameters tempor
 define_spatial_chunks(outDEMf, outSRf, chunksize, buffer, outdir, us_latlon)
 
 % at medium resolution:
-%define_spatial_chunks(outDEMc, outSRc, chunksize, buffer, outdir, us_latlon)
+define_spatial_chunks(outDEMc, outSRc, chunksize, buffer, outdir, us_latlon)
 
 
 %% For each spatial chunk,
@@ -50,7 +50,7 @@ finechunks = finechunks.chunk_coords;
 nchunk = size(finechunks.st_col,2);
 
 %for ch = 1:nchunk
-    ch=152;
+    ch=758;
     % define where to model at what resolution
     [outlonf, outlatf, outlonc, outlatc] = pick_modeling_locations(ch, outDEMf, outDEMc, outSRf, outSRc, elev_dif_thres, solar_dif_thres, outdir);
     % AT THIS CHUNK SIZE, HOW MANY CHUNKS ARE COMPLETELY COARSE RES?
