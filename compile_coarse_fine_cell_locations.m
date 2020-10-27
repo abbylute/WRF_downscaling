@@ -1,6 +1,6 @@
-mdir = '/DATA/WRF/downscaled/WUS/chunks/';
+mdir = 'DATA/WRF/downscaled/WUS/chunks/';
 
-for ii = 1:nchunks
+for ii = 1:nchunk
    m = matfile([mdir,'points_to_model_chunk_',num2str(ii),'.mat']);
    if ii==1
        lonf = m.outlonf;
@@ -8,10 +8,10 @@ for ii = 1:nchunks
        lonc = m.outlonc;
        latc = m.outlatc;
    else
-      lonf = [lonf, outlonf];
-      latf = [latf, outlatf];
-      lonc = [lonc, outlonc];
-      latc = [latc, outlatc]; 
+      lonf = [lonf; m.outlonf];
+      latf = [latf; m.outlatf];
+      lonc = [lonc; m.outlonc];
+      latc = [latc; m.outlatc]; 
    end
 end
 
