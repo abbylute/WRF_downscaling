@@ -125,7 +125,7 @@ vartime = tic;
 datdown = ones(size(hilon,1), size(hilon,2), size(cal,1)) * NaN;
         
     for yy = 1:length(yrs) % for each yearly file
-      tic
+      %tic
         filenm = [wrfhdir,era,'/',char(varnm),'/',char(varnm),'_',era,'_trimmed_',num2str(outTR),'hr_',num2str(yrs(yy)),'.mat'];
         datall = matfile(filenm);
         datall = datall.outdata((wrfminrow-side):(wrfmaxrow+side), (wrfmincol-side):(wrfmaxcol+side),:);
@@ -133,7 +133,7 @@ datdown = ones(size(hilon,1), size(hilon,2), size(cal,1)) * NaN;
         ymdh = find(cal(:,1) == yrs(yy));
 
         lr = ones(nwrf,length(ymdh))*NaN;
-    toc % 4s
+    %toc % 4s
 
 % create subsets of lon, lat, elev, land to match the subset used for
 % datall
@@ -143,7 +143,7 @@ datdown = ones(size(hilon,1), size(hilon,2), size(cal,1)) * NaN;
     wrflandt = wrfland((wrfminrow-side):(wrfmaxrow+side), (wrfmincol-side):(wrfmaxcol+side));
     
         % Calculate hourly lapse rates
-        tic
+        %tic
         for pp = 1:nwrf
             [rowpicks, colpicks] = find(wrflont == wrflonl(fin(pp)) & wrflatt == wrflatl(fin(pp)));
             rowpicks = (rowpicks - side):(rowpicks + side);
@@ -170,10 +170,10 @@ datdown = ones(size(hilon,1), size(hilon,2), size(cal,1)) * NaN;
         end % end wrf points
         clear dat elev land X b pp rowpicks colpicks ncell
         %figure(1);clf;scatter(wrflonl(fin),wrflatl(fin),45,lr(:,1),'filled');colorbar();
-toc % 6.3s
+%toc % 6.3s
         
         %--- Interpolate lapse rates to high resolution ---%   
-        tic
+        %tic
         lr_fine = ones(size(hilon,1),size(hilon,2),length(ymdh))*NaN;
         
         for tt = 1:length(ymdh) % ~ 10 minutes for yy=1
@@ -184,9 +184,9 @@ toc % 6.3s
             lr_fine(:,:,tt) = reshape(lr_f, size(hilon));
         end
         clear F lr_f lr tt
-         toc % 5s
+         %toc % 5s
          
-         tic
+         %tic
         % trim data to chunk
         %datall = datall(wrfminrow:wrfmaxrow, wrfmincol:wrfmaxcol,:);
         datall = datall((side+1):(size(datall,1)-side), (side+1):(size(datall,2)-side),:);
@@ -197,12 +197,12 @@ toc % 6.3s
             datlong(ii,:) = datall((wrfrow(ii)-wrfminrow+1), (wrfcol(ii)-wrfmincol+1), :); 
         end
         clear datall ii
-        toc % 0.04s
+       % toc % 0.04s
         
         % for each time step
         % - spatially interpolate hourly data
         % - apply lapse rate correction
-        tic
+        %tic
         for tt = 1:size(datlong,2) % for each time step
             % interpolate raw outTR hourly data to finer spatial resolution
             F = scatteredInterpolant(double(wrflonl(fin)), double(wrflatl(fin)), datlong(:,tt));
@@ -217,20 +217,20 @@ toc % 6.3s
             clear F dat_f dat_fine
         end % end time steps
         clear datlong lr_fine
-        toc % 5.2s
+       % toc % 5.2s
     end % end years
-    tic
+    %tic
     datdown = single(datdown);
 
     
     % extract points to model at
     datdown = reshape(datdown, size(datdown,1)*size(datdown,2), size(datdown,3));
-    f = ismember([hilonl,hilatl], [outlon,outlat], 'rows');
-    datdown = datdown(f,:); % should be able to use outlon,outlat to index this
+    [~,i] = ismember([outlon,outlat], [hilonl,hilatl], 'rows');
+    datdown = datdown(i,:); 
 
     % round to desired precision
     datdown = round(datdown, 1); % to the 10th
-toc % 1.5s
+%toc % 1.5s
 
     % Save downscaled data
     savetime = tic;
@@ -437,10 +437,9 @@ for vv = 1:length(varnms)
     
     % extract points to model at
     datdown = reshape(datdown, size(datdown,1)*size(datdown,2), size(datdown,3));
-    f = ismember([hilonl,hilatl], [outlon,outlat], 'rows');
-    datdown = datdown(f,:); % should be able to use outlon,outlat to index this
+    [~,i] = ismember([outlon,outlat], [hilonl,hilatl], 'rows');
+    datdown = datdown(i,:); 
 
-    
     % round to desired precision
     if ismember(vv, [2,4]) % for ppt, wind
         datdown = round(datdown, 1); % to the 10th
@@ -476,7 +475,7 @@ end % end variables
     vartime = tic;
 
     % preallocate output
-    datdown = ones(size(hilon,1), size(hilon,2), 1) * NaN;
+    %datdown = ones(size(hilon,1), size(hilon,2), 1) * NaN;
    
     mon = matfile([wrfmdir,char(varnm),'_',era,'.mat']);
     mon = mon.psfc_monthly(130:600,290:830,:);
@@ -498,10 +497,9 @@ end % end variables
     datdown = single(datfine);
     
     % extract points to model at
-    datdown = reshape(datdown, size(datdown,1)*size(datdown,2), size(datdown,3));
-    f = ismember([hilonl,hilatl], [outlon,outlat], 'rows');
-    datdown = datdown(f,:); % should be able to use outlon,outlat to index this
-
+    [~,i] = ismember([outlon,outlat], [hilonl,hilatl], 'rows');
+    datdown = datdown(i,:); 
+    
     % round to desired precision
     datdown = round(datdown/100,1)*100; % round to 10th of hPa or mb
     
