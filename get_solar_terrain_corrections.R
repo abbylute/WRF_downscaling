@@ -23,7 +23,7 @@
   }
 
 # so that rgdal will load:
-  dyn.load("/opt/modules/climatology/gdal/3.0.2/lib/libgdal.so") # on thunder
+#  dyn.load("/opt/modules/climatology/gdal/3.0.2/lib/libgdal.so") # on thunder
   
 require(raster)
 require(insol)
@@ -173,9 +173,6 @@ for (mm in 1:12){
     } # end if during daylight
   } # end timesteps
 } # end month
-
-# reshape solar_tc to be space x time
-# solar_tc = array(solar_tc, dim=c(nsites, 12*length(ts)))
 
 # save terrain corrections
 writeMat(outfn, solar_tc = solar_tc)
