@@ -50,7 +50,7 @@ finechunks = finechunks.chunk_coords;
 nchunk = size(finechunks.st_col,2);
 
 %for ch = 1:nchunk
-    ch=152;
+    ch=160;
     
     if finechunks.in_us(ch)==1 % if inside the us, skip this chunk
     
