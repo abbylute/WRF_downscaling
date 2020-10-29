@@ -12,7 +12,7 @@ paramtext.outlat=outlat;
 paramtext.outTR = outTR; 
 paramtext.outfile = tcfilename;
 
-paramfilename = [solarparamdir,'chunk_',num2str(ch),'coarse.mat'];;
+paramfilename = [solarparamdir,'chunk_',num2str(ch),'_',num2str(outSR),'m.mat'];
 save(paramfilename,'-struct','paramtext','-v6');
         
 end
