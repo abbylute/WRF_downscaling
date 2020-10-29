@@ -103,14 +103,14 @@ clear ilat ilon s2 s1 in
 
 % Only save chunk information for chunks within US
 in_us = logical(in_us);
-st_row = st_row(in_us);
-en_row = en_row(in_us);
-st_col = st_col(in_us);
-en_col = en_col(in_us);
-st_row_buf = st_row_buf(in_us);
-en_row_buf = en_row_buf(in_us);
-st_col_buf = st_col_buf(in_us);
-en_col_buf = en_col_buf(in_us);
+%st_row = st_row(in_us);
+%en_row = en_row(in_us);
+%st_col = st_col(in_us);
+%en_col = en_col(in_us);
+%st_row_buf = st_row_buf(in_us);
+%en_row_buf = en_row_buf(in_us);
+%st_col_buf = st_col_buf(in_us);
+%en_col_buf = en_col_buf(in_us);
 
 
 % save outputs
@@ -124,7 +124,7 @@ chunk_coords.st_row_buf = st_row_buf;
 chunk_coords.en_row_buf = en_row_buf;
 chunk_coords.st_col_buf = st_col_buf;
 chunk_coords.en_col_buf = en_col_buf;
-%chunk_coords.in_us = in_us;
+chunk_coords.in_us = in_us;
 save([outdir,'chunks/chunk_coordinates_',num2str(outSR),'m.mat'], 'chunk_coords');
 
 end
