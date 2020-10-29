@@ -111,7 +111,8 @@ vartime = tic;
 [status] = system([pathtoR,' --vanilla ',solartcRscript,' ',paramfilename]);
 
 downscale_WRF_solar(ch, tcfilename, wrfhdir, outTR, outSR, era, ...
-    wrflon, wrflat, wrfminrow, wrfmaxrow, wrfmincol, wrfmaxcol, outlon, outlat, outdir)
+    wrflon, wrflat, wrfminrow, wrfmaxrow, wrfmincol, wrfmaxcol, ...
+    outlon, outlat, outdir, xoutc, youtc, xout, yout)
 
 vtoc = toc(vartime);
 disp(['running ACSWDNB took ',num2str(vtoc/60),' minutes.']);
