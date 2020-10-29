@@ -175,7 +175,7 @@ for (mm in 1:12){
 } # end month
 
 # reshape solar_tc to be space x time
-solar_tc = array(solar_tc, dim=c(nsites, 12*length(ts)))
+# solar_tc = array(solar_tc, dim=c(nsites, 12*length(ts)))
 
 # save terrain corrections
 writeMat(outfn, solar_tc = solar_tc)
