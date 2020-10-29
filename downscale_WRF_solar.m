@@ -1,8 +1,8 @@
 function[] = downscale_WRF_solar(ch, tcfilename, wrfhdir, outTR, outSR, era, ...
-    wrflon, wrflat, wrfminrow, wrfmaxrow, wrfmincol, wrfmaxcol, outlon, outlat, outdir)
+    wrflon, wrflat, wrfminrow, wrfmaxrow, wrfmincol, wrfmaxcol, ...
+    outlon, outlat, outdir, xoutc, youtc, xout, yout)
 
 
-    %profile on % took 100 minutes
     varnm = 'ACSWDNB';
     
     % set up cal
@@ -18,7 +18,8 @@ function[] = downscale_WRF_solar(ch, tcfilename, wrfhdir, outTR, outSR, era, ...
     % at every outTR hour
     % shift tc months (jan-dec) to match cal (oct-sep)
     nt = 24/outTR; % # of time steps per day (month)
-    tc = [tc(:,(size(tc,2)-(nt*3)+1):size(tc,2)) tc(:,1:(nt*9))];
+    %tc = [tc(:,(size(tc,2)-(nt*3)+1):size(tc,2)) tc(:,1:(nt*9))];
+    tc = [tc(:,10:12,:) tc(:,1:9,:)];
     
     % set NaN's to 1, since this will create a terrain correction of 1 = no
     % change
@@ -27,7 +28,7 @@ function[] = downscale_WRF_solar(ch, tcfilename, wrfhdir, outTR, outSR, era, ...
     %tc(tc > 5) = 5;
     
     % reshape tc
-    tc = reshape(tc, nsites, size(tc,2)/nt, nt); % sites, month/day, hour
+    %tc = reshape(tc, nsites, size(tc,2)/nt, nt); % sites, month/day, hour
     
     % interpolate each hour from mid-month days to all days of the year
     tcint = ones(nsites, size(cal,1)/nt, nt) * NaN; % site, day, hour
@@ -71,11 +72,19 @@ function[] = downscale_WRF_solar(ch, tcfilename, wrfhdir, outTR, outSR, era, ...
         datall = datall.outdata(wrfminrow:wrfmaxrow, wrfmincol:wrfmaxcol,:);
         datall = reshape(datall, size(datall,1)*size(datall,2),size(datall,3));
         
-        % extract points of interest from raw wrf data:
-        datall = datall(fsm,:);
+        dat_fine = ones(length(xout),length(ymdh))*NaN;
+        for tt = 1:length(ymdh)
+            F = scatteredInterpolant(double(wrflonsub), double(wrflatsub), datall(:,tt));
+            dat_f = F(xoutc,youtc); 
+            dat_fine(:,tt) = interp2(xoutc, youtc, dat_f, xout,yout);
+        end
         
+        % extract points to model at
+        [~,i] = ismember([outlon,outlat], [xout,yout], 'rows');
+        dat_fine = dat_fine(i,:); 
+
         % apply terrain correction
-        datdown(:,ymdh) = datall .* tcint(:,ymdh);
+        datdown(:,ymdh) = dat_fine .* tcint(:,ymdh);
         %figure(1);clf;scatter(wrflonsub(fsm),wrflatsub(fsm),45,datdown(:,1),'filled');colorbar();
 
     end % end years
