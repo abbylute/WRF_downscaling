@@ -4,7 +4,7 @@
 outTR = 4; % output temporal resolution (hrs)
 outSRf = 210; % fine output spatial resolution (m)
 outSRc = 1050; % coarse output spatial resolution (m)
-chunksize = outSRf*200; % chunk size without buffer (m). should be a multiple of outSR.
+chunksize = outSRf*400; % chunk size without buffer (m). should be a multiple of outSR.
 buffer = 16000; % size of buffer around each chunk (m)
     % buffer should allow > than (window-1)/2 WRF grid cells to be
     % available on all sides for lapse rate calculations
@@ -50,45 +50,37 @@ finechunks = finechunks.chunk_coords;
 nchunk = size(finechunks.st_col,2);
 
 %for ch = 1:nchunk
-    ch=758;
-    % define where to model at what resolution
-    [outlonf, outlatf, outlonc, outlatc] = pick_modeling_locations(ch, outDEMf, outDEMc, outSRf, outSRc, elev_dif_thres, solar_dif_thres, outdir);
-    % AT THIS CHUNK SIZE, HOW MANY CHUNKS ARE COMPLETELY COARSE RES?
-    %if isempty(outlonf)
-    %    iscoarse(ch) =1;
-    %elseif isempty(outlonc)
-    %    iscoarse(ch) =0;
-    %else
-    %    iscoarse(ch) =2;
-    %end
-
+    ch=152;
     
-    % downscale outTR hourly datasets dependent on spatial scale
+    if finechunks.in_us(ch)==1 % if inside the us, skip this chunk
     
-    % only downscale at fine res
-    tic
-    if (isempty(outlonc) && ~isempty(outlonf)) 
-        downscale_WRF_lapse_rates(ch, outSRf, inDEM, outDEMf, outDEMftif, outTR, window, outdir, wrfhdir, wrfmdir, prismppt, era, 'fine', solarparamdir, pathtoR, solartcRscript)
-            
-    % only downscale at coarse res
-    elseif (~isempty(outlonc) && isempty(outlonf)) 
-        downscale_WRF_lapse_rates(ch, outSRc, inDEM, outDEMc, outDEMctif, outTR, window, outdir, wrfhdir, wrfmdir, prismppt, era, 'coarse', solarparamdir, pathtoR, solartcRscript)    
+        % define where to model at what resolution
+        [outlonf, outlatf, outlonc, outlatc] = pick_modeling_locations(ch, outDEMf, outDEMc, outSRf, outSRc, elev_dif_thres, solar_dif_thres, outdir);
 
-    % downscale at both res    
-    elseif (~isempty(outlonc) && ~isempty(outlonf)) 
-        downscale_WRF_lapse_rates(ch, outSRf, inDEM, outDEMf, outDEMftif, outTR, window, outdir, wrfhdir, wrfmdir, prismppt, era, 'fine', solarparamdir, pathtoR, solartcRscript)
-        downscale_WRF_lapse_rates(ch, outSRc, inDEM, outDEMc, outDEMctif, outTR, window, outdir, wrfhdir, wrfmdir, prismppt, era, 'coarse', solarparamdir, pathtoR, solartcRscript)
-        
-    else
-        warning(['chunk ',num2str(ch),' did not have any points to downscale'])
-    end
-    toc
 
+        % downscale outTR hourly datasets dependent on spatial scale
+
+        % only downscale at fine res
+        tic
+        if (isempty(outlonc) && ~isempty(outlonf)) 
+            downscale_WRF_lapse_rates(ch, outSRf, inDEM, outDEMf, outDEMftif, outTR, window, outdir, wrfhdir, wrfmdir, prismppt, era, 'fine', solarparamdir, pathtoR, solartcRscript)
+
+        % only downscale at coarse res
+        elseif (~isempty(outlonc) && isempty(outlonf)) 
+            downscale_WRF_lapse_rates(ch, outSRc, inDEM, outDEMc, outDEMctif, outTR, window, outdir, wrfhdir, wrfmdir, prismppt, era, 'coarse', solarparamdir, pathtoR, solartcRscript)    
+
+        % downscale at both res    
+        elseif (~isempty(outlonc) && ~isempty(outlonf)) 
+            downscale_WRF_lapse_rates(ch, outSRf, inDEM, outDEMf, outDEMftif, outTR, window, outdir, wrfhdir, wrfmdir, prismppt, era, 'fine', solarparamdir, pathtoR, solartcRscript)
+            downscale_WRF_lapse_rates(ch, outSRc, inDEM, outDEMc, outDEMctif, outTR, window, outdir, wrfhdir, wrfmdir, prismppt, era, 'coarse', solarparamdir, pathtoR, solartcRscript)
+
+        else
+            warning(['chunk ',num2str(ch),' did not have any points to downscale'])
+        end
+        toc
+    end % if in us
 
 %end
-
-% OUTPUT
-% outTR x outSR datasets for each chunk for each variable
 
 
 
