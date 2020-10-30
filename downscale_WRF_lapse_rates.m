@@ -436,6 +436,10 @@ for vv = 1:length(varnms)
     
     datdown = single(datdown);
     
+    if vv==4 % WIND
+        datdown(datdown<0)=0;
+    end
+    
     % extract points to model at
     datdown = reshape(datdown, size(datdown,1)*size(datdown,2), size(datdown,3));
     [~,i] = ismember([outlon,outlat], [hilonl,hilatl], 'rows');
