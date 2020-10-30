@@ -86,21 +86,22 @@ outelevf = outlonc;
         else
 
             elevdif = max(max(fine_elevs)) - min(min(fine_elevs));
-            if (elevdif < elev_dif_thres) 
+            
+            solar = solarradiation_days(fine_elevs, latfine(rpicks,1), outSRf, .25, 1);
+            solarpdif = (max(max(solar))-min(min(solar)))/mean(mean(solar))*100;
+
+            if (elevdif < elev_dif_thres && solarpdif < solar_dif_thres) 
                 % append lon/lat of coarse grid cell to list of locations to model
                 outlonc = [outlonc; lonco(cc)];
                 outlatc = [outlatc; latco(cc)];
                 outelevc = [outelevc; elevco(cc)];
             else
-                solar = solarradiation_days(fine_elevs, latfine(rpicks,1), outSRf, .25, 1);
-                solarpdif = (max(max(solar))-min(min(solar)))/min(min(solar))*100;
-
-                if (solarpdif < solar_dif_thres) 
-                    % append lon/lat of coarse grid cell to list of locations to model
-                    outlonc = [outlonc; lonco(cc)];
-                    outlatc = [outlatc; latco(cc)];
-                    outelevc = [outelevc; elevco(cc)];
-                else
+                %if (solarpdif < solar_dif_thres) 
+                %    % append lon/lat of coarse grid cell to list of locations to model
+                %    outlonc = [outlonc; lonco(cc)];
+                %    outlatc = [outlatc; latco(cc)];
+                %    outelevc = [outelevc; elevco(cc)];
+                %else
                    % append lon/lat of all fine grid cells in this coarse grid cell 
                    % to the list of locations to model 
                    lon1 = reshape(lonfine(rpicks,cpicks), length(rpicks)*length(cpicks), 1);
@@ -109,7 +110,7 @@ outelevf = outlonc;
                    outlonf = [outlonf; lon1];
                    outlatf = [outlatf; lat1];
                    outelevf = [outelevf; elev1];
-                end
+                %end
             end
         end % end if all nans
     end % end cells
