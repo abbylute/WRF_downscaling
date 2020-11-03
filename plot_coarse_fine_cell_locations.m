@@ -25,3 +25,19 @@ plotm(lat,lon,'k','linewidth',.7);
 
 print('/Volumes/WDPassport/DATA/WRF/Downscaled/coarse_cell_coverage.png','-dpng','-r500');      
         
+
+
+% What percent of domain is covered by fine vs. coarse?
+% rough estimate
+finearea = (length(pts.latf).*210*210)/1000/1000; % km2
+coarsearea = (length(pts.latc).*1050*1050)/1000/1000; % km2
+totalarea = finearea+coarsearea;
+finepercent = (finearea/totalarea)*100
+coarsepercent = (coarsearea/totalarea)*100
+
+
+
+
+
+
+
