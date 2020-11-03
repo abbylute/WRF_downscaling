@@ -262,17 +262,22 @@ for vv = 1:length(varnms)
             plonlat = prism.lonlat;
             prism = prism.prism_ppt_monthly;
             % interpolate PRISM to WRF grid
+            % we could save time if we did this once ahead of time, then
+            % just read in the PRISM ppt at the WRF grid points
             mon = ones(size(wrflonl,1), nmonths)*NaN;
+            good = ~isnan(prism(:,1));
             for mm = 1:nmonths
-                F = scatteredInterpolant(plonlat, prism(:,mm));
+                F = scatteredInterpolant(plonlat(good,:), prism(good,mm));
                 mon(:,mm) = F(double(wrflonl), double(wrflatl));
             end
             mon = reshape(mon, size(wrflon,1), size(wrflon,2), nmonths);
+            % infill portions of domain that prism doesn't cover (e.g. near and above canadian border)
+            mon(isnan(mon)) = wrfppt(isnan(mon)); 
             % calculate correction factors to apply to hourly data
             ratppt = mon./wrfppt;
             ratppt(ratppt == Inf) = 1;
             ratppt(isnan(ratppt)) = 1;
-            clear wrfppt plonlat prism F mm
+            clear wrfppt plonlat prism F mm good
         elseif vv == 3
             mon = matfile([wrfmdir,char(varnms(vv)),'_',era,'.mat']);
             mon = squeeze(mon.QDATA(130:600,290:830,1,:));
