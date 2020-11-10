@@ -270,9 +270,24 @@ for vv = 1:length(varnms)
                 F = scatteredInterpolant(plonlat(good,:), prism(good,mm));
                 mon(:,mm) = F(double(wrflonl), double(wrflatl));
             end
+            
             mon = reshape(mon, size(wrflon,1), size(wrflon,2), nmonths);
+                     
+            % remove edge effect along US-CAN border
+            for mm = 1:nmonths
+                f = wrflat>49.05;
+                monm = mon(:,:,mm);
+                wrfm = wrfppt(:,:,mm);
+                monm(f) = wrfm(f);
+                mon(:,:,mm) = monm;
+            end
+            clear f monm wrfm
+                
+            %mon(wrflat>49.05) = wrfppt(wrflat>49.05);
+            
             % infill portions of domain that prism doesn't cover (e.g. near and above canadian border)
-            mon(isnan(mon)) = wrfppt(isnan(mon)); 
+            %mon(isnan(mon)) = wrfppt(isnan(mon)); 
+            
             % calculate correction factors to apply to hourly data
             ratppt = mon./wrfppt;
             ratppt(ratppt == Inf) = 1;
@@ -336,6 +351,8 @@ for vv = 1:length(varnms)
         % interpolate to output resolution
         if vv==2 
             ratpptl = ones(nwrf, nmonths) * NaN;
+            ratppt = ratppt(wrfminrow:wrfmaxrow, wrfmincol:wrfmaxcol,:);
+
             for ii = 1:nwrf
                 ratpptl(ii,:) = ratppt((wrfrow(ii)-wrfminrow+1), (wrfcol(ii)-wrfmincol+1), :);
             end
