@@ -46,6 +46,10 @@ outlon = params$outlon # lons to save
 outlat = params$outlat # lats to save
 deltat = params$outTR[1,1] # temporal resolution (hrs)
 outfn = params$outfile[1,1] # output filename
+outgmttz = params$final_GMT_tz[1,1] # time zone GMT of output (of WRF data)
+reggmttz = params$region_GMT_tz[1,1] # time zone GMT of full modeling domain
+
+tmz = reggmttz
 
 pts_to_model = matrix(c(outlon, outlat), ncol = 2); # lon and lat to save corrections at
 
@@ -81,6 +85,9 @@ demflat <- aggregate(demfine,
 #rm(demflat);gc()
 #demflat <- raster(paste0(demdir,demres,'m/WUS_',demres,'m_utm_agg_to_4km.tif'))
 
+# then interpolate the flat dem to fine resolution to avoid spatial chunkiness in the terrain corrections
+demflat <- projectRaster(demflat, demfine, res = res(demfine))
+
 
 # 3. Set Parameters:
 #-------------------------
@@ -93,7 +100,14 @@ day=15
 #buf_m = 10000 # buffer in meters around each site to consider in terrain correction
 mlon = mean(pts_to_model[,1])
 mlat = mean(pts_to_model[,2])
-ts = seq(0,23,deltat) # time steps each day
+ts = seq(0,23,deltat) # time steps each day in WRF time
+
+# translate wrf times to local times:
+tslocal = ts + reggmttz
+tslocal[tslocal<0] <- tslocal[tslocal<0] + 24
+ts = tslocal 
+# so output will be for WRF hours of interest starting at 0:00am GMT0
+
 
 # 4. Run 'insol' solar monthly on mtn and flat dems:
 #-------------------------
@@ -106,9 +120,9 @@ cgr <- cgrad(demfine) # compute unit vector normal to every grid cell
 cgrf <- cgrad(demflat)
 
 for (mm in 1:12){
-  tz <- tz_lookup_coords(mlat, mlon, method = "fast", warn = F)
-  tz <- tz_offset(paste0("2007-",mm,"-15"), tz = tz)
-  tmz <- tz$utc_offset_h
+  #tz <- tz_lookup_coords(mlat, mlon, method = "fast", warn = F)
+  #tz <- tz_offset(paste0("2007-",mm,"-15"), tz = tz)
+  #tmz <- tz$utc_offset_h
   
   jd=JDymd(year,mm,day,hour=12) # compute Julian Day from a date
   day1=insol::daylength(mlat,mlon,jd,tmz) # length of daylight
