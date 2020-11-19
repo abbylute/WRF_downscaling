@@ -32,7 +32,7 @@ addpath([mdir,'DATA/WRF/downscaled/Code/'])
 pathtoR = '/opt/modules/devel/R/3.5.1/lib64/R/bin/Rscript'; % location on tesla
 solartcRscript = [mdir,'DATA/WRF/downscaled/Code/get_solar_terrain_corrections.R']; % location of R solar terrain correction script
 solarparamdir = [outdir,'solar_param_files/']; % file to store parameters temporarily for solar downscaling
-
+reggmttz = -7; % GMT timezone of the full domain
 
 %% Define spatial chunks
 
@@ -63,16 +63,16 @@ nchunk = size(finechunks.st_col,2);
         % only downscale at fine res
         tic
         if (isempty(outlonc) && ~isempty(outlonf)) 
-            downscale_WRF_lapse_rates(ch, outSRf, inDEM, outDEMf, outDEMftif, outTR, window, outdir, wrfhdir, wrfmdir, prismppt, era, 'fine', solarparamdir, pathtoR, solartcRscript)
+            downscale_WRF_lapse_rates(ch, outSRf, inDEM, outDEMf, outDEMftif, outTR, window, outdir, wrfhdir, wrfmdir, prismppt, era, 'fine', solarparamdir, pathtoR, solartcRscript, reggmttz)
 
         % only downscale at coarse res
         elseif (~isempty(outlonc) && isempty(outlonf)) 
-            downscale_WRF_lapse_rates(ch, outSRc, inDEM, outDEMc, outDEMctif, outTR, window, outdir, wrfhdir, wrfmdir, prismppt, era, 'coarse', solarparamdir, pathtoR, solartcRscript)    
+            downscale_WRF_lapse_rates(ch, outSRc, inDEM, outDEMc, outDEMctif, outTR, window, outdir, wrfhdir, wrfmdir, prismppt, era, 'coarse', solarparamdir, pathtoR, solartcRscript, reggmttz)    
 
         % downscale at both res    
         elseif (~isempty(outlonc) && ~isempty(outlonf)) 
-            downscale_WRF_lapse_rates(ch, outSRf, inDEM, outDEMf, outDEMftif, outTR, window, outdir, wrfhdir, wrfmdir, prismppt, era, 'fine', solarparamdir, pathtoR, solartcRscript)
-            downscale_WRF_lapse_rates(ch, outSRc, inDEM, outDEMc, outDEMctif, outTR, window, outdir, wrfhdir, wrfmdir, prismppt, era, 'coarse', solarparamdir, pathtoR, solartcRscript)
+            downscale_WRF_lapse_rates(ch, outSRf, inDEM, outDEMf, outDEMftif, outTR, window, outdir, wrfhdir, wrfmdir, prismppt, era, 'fine', solarparamdir, pathtoR, solartcRscript, reggmttz)
+            downscale_WRF_lapse_rates(ch, outSRc, inDEM, outDEMc, outDEMctif, outTR, window, outdir, wrfhdir, wrfmdir, prismppt, era, 'coarse', solarparamdir, pathtoR, solartcRscript, reggmttz)
 
         else
             warning(['chunk ',num2str(ch),' did not have any points to downscale'])
