@@ -1,4 +1,4 @@
-function[paramfilename, tcfilename] = write_solar_paramfile(ch, inDEM, outSR, outDEM, outlon, outlat, outTR, era, solarparamdir, outdir)
+function[paramfilename, tcfilename] = write_solar_paramfile(ch, inDEM, outSR, outDEM, outlon, outlat, outTR, era, solarparamdir, outdir,reggmttz)
 
 tcfilename = [outdir,era,'/ACSWDNB/solartc_',era,'_',num2str(outSR),'m_chunk',num2str(ch),'.mat'];
 
@@ -11,6 +11,8 @@ paramtext.outlon=outlon;
 paramtext.outlat=outlat;
 paramtext.outTR = outTR; 
 paramtext.outfile = tcfilename;
+paramtext.final_GMT_tz = 0;
+paramtext.region_GMT_tz = reggmttz;
 
 paramfilename = [solarparamdir,'chunk_',num2str(ch),'_',num2str(outSR),'m.mat'];
 save(paramfilename,'-struct','paramtext','-v6');
