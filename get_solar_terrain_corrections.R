@@ -86,8 +86,8 @@ demflat <- aggregate(demfine,
 #demflat <- raster(paste0(demdir,demres,'m/WUS_',demres,'m_utm_agg_to_4km.tif'))
 
 # then interpolate the flat dem to fine resolution to avoid spatial chunkiness in the terrain corrections
-demflat <- projectRaster(demflat, demfine, res = res(demfine))
-
+#demflat <- projectRaster(demflat, demfine, res = res(demfine))
+demflat <- disaggregate(demflat, fact=round(4000/demres), method='bilinear')
 
 # 3. Set Parameters:
 #-------------------------
