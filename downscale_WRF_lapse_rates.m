@@ -1,5 +1,5 @@
 function[] = downscale_WRF_lapse_rates(ch, outSR, inDEM, outDEM, outDEMtif,...
-    outTR, window, outdir, wrfhdir, wrfmdir, prismppt, era, resname, solarparamdir, pathtoR, solartcRscript)
+    outTR, window, outdir, wrfhdir, wrfmdir, prismppt, era, resname, solarparamdir, pathtoR, solartcRscript, reggmttz)
 
 % ch = chunk number to run
 % outSR = spatial resolution to downscale to (m)
@@ -107,7 +107,7 @@ function[] = downscale_WRF_lapse_rates(ch, outSR, inDEM, outDEM, outDEMtif,...
 
 %% Downscale Solar
 vartime = tic;
-[paramfilename,tcfilename] = write_solar_paramfile(ch, inDEM, outSR, outDEMtif, outlon, outlat, outTR, era, solarparamdir, outdir);
+[paramfilename,tcfilename] = write_solar_paramfile(ch, inDEM, outSR, outDEMtif, outlon, outlat, outTR, era, solarparamdir, outdir, reggmttz);
 [status] = system([pathtoR,' --vanilla ',solartcRscript,' ',paramfilename]);
 
 downscale_WRF_solar(ch, tcfilename, wrfhdir, outTR, outSR, era, ...
