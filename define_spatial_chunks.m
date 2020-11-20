@@ -95,6 +95,11 @@ for ii = 1:size(st_row,2)
     %    forever
         in_us(ii) = sum((sum(in))) > 0;
     %end
+    
+    % also check if outside of bounds:
+    if (max(max(ilat))<30.99 || max(max(ilon))>-102.99)
+        in_us(ii) = 0;
+    end
 end
 p = in_us ==0;
 plot((st_col(p)+en_col(p))./2, (st_row(p)+en_row(p))./2, '.r','MarkerSize',20);
