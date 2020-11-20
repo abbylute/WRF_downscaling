@@ -11,8 +11,8 @@ paramtext.outlon=outlon;
 paramtext.outlat=outlat;
 paramtext.outTR = outTR; 
 paramtext.outfile = tcfilename;
-paramtext.final_GMT_tz = 0;
-paramtext.region_GMT_tz = reggmttz;
+paramtext.finalGMTtz = 0;
+paramtext.regionGMTtz = reggmttz;
 
 paramfilename = [solarparamdir,'chunk_',num2str(ch),'_',num2str(outSR),'m.mat'];
 save(paramfilename,'-struct','paramtext','-v6');
