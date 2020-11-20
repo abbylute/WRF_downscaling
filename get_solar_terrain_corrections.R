@@ -170,8 +170,8 @@ for (mm in 1:12){
       
       #Irrflat <- crop(Irrflat, extent(Irr))
       
-      Ifnew <- disaggregate(Irrflat,4000/demres)
-      Ifnew <- crop(Ifnew, extent(Irr))
+      #Ifnew <- disaggregate(Irrflat,4000/demres)
+      Ifnew <- crop(Irrflat, extent(Irr))
   
       # calculate ratio and assign it to output
       rat <- Irr/Ifnew
