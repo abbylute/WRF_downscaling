@@ -46,8 +46,8 @@ outlon = params$outlon # lons to save
 outlat = params$outlat # lats to save
 deltat = params$outTR[1,1] # temporal resolution (hrs)
 outfn = params$outfile[1,1] # output filename
-outgmttz = params$final_GMT_tz[1,1] # time zone GMT of output (of WRF data)
-reggmttz = params$region_GMT_tz[1,1] # time zone GMT of full modeling domain
+outgmttz = params$finalGMTtz[1,1] # time zone GMT of output (of WRF data)
+reggmttz = params$regionGMTtz[1,1] # time zone GMT of full modeling domain
 
 tmz = reggmttz
 
