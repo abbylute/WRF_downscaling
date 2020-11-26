@@ -100,7 +100,8 @@ day=15
 #buf_m = 10000 # buffer in meters around each site to consider in terrain correction
 mlon = mean(pts_to_model[,1])
 mlat = mean(pts_to_model[,2])
-ts = seq(0,23,deltat) # time steps each day in WRF time
+#ts = seq(0,23,deltat) # time steps each day in WRF time
+ts = seq(deltat/2, 23, deltat) # use midpoint of each timestep instead of start time
 
 # translate wrf times to local times:
 tslocal = ts + reggmttz
@@ -134,8 +135,11 @@ for (mm in 1:12){
       solar_tc[, mm, tt] <- 1
     
     } else if (srs>=day1[1] & srs<=day1[2]) { # if hr is during daylight then run solar routine
+        hr_min = strsplit(as.character(srs),"\\.")
+        hr = as.numeric(hr_min[[1]][1])
+        minu = as.numeric(hr_min[[1]][2]); minu[is.na(minu)] <- 0;
         
-      jd=JDymd(year,mm,day,hour=srs,minute=0)
+      jd=JDymd(year,mm,day,hour=hr,minute=minu)
       sv=sunvector(jd,mlat,mlon,tmz)
       zenith=sunpos(sv)[2]
       
