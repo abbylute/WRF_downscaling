@@ -7,8 +7,10 @@ nchunk = size(finechunks.st_col,2);
     
 lonf = ones(1,0);
 latf = ones(1,0);
+elevf = ones(1,0);
 lonc = ones(1,0);
 latc = ones(1,0);
+elevc = ones(1,0);
 
 for ii = 1:nchunk
     
@@ -17,11 +19,13 @@ for ii = 1:nchunk
 
       lonf = [lonf; m.outlonf];
       latf = [latf; m.outlatf];
+      elevf = [elevf; m.outelevf];
       lonc = [lonc; m.outlonc];
       latc = [latc; m.outlatc]; 
+      elevc = [elevc; m.outelevc];
 
    end
 end
 
 
-save([mdir,'coarse_fine_cell_locations.mat'],'lonf','latf','lonc','latc');
+save([mdir,'coarse_fine_cell_locations.mat'],'lonf','latf','elevf','lonc','latc','elevc');
