@@ -93,6 +93,7 @@ function[] = downscale_WRF_solar(ch, tcfilename, wrfhdir, outTR, outSR, era, ...
 
     % round to desired precision
     datdown = round(datdown, 5, 'significant'); % 5 sig figs
+    datdown(datdown < 0) = 0;
 
     % save downscaled data
     savetime = tic;
