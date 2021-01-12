@@ -290,7 +290,7 @@ for vv = 1:length(varnms)
             
             % calculate correction factors to apply to hourly data
             ratppt = mon./wrfppt;
-            ratppt(ratppt == Inf) = 1;
+            ratppt(ratppt > 5) = 5;
             ratppt(isnan(ratppt)) = 1;
             clear wrfppt plonlat prism F mm good
         elseif vv == 3
@@ -401,42 +401,48 @@ for vv = 1:length(varnms)
             % compute number of timesteps/month with ppt>0
             mgrp = findgroups(yrcal(:,2));
             mgrpu = unique(mgrp);
-            nd = ones(size(datlong,1),length(mgrpu))*NaN;
+            nd = zeros(size(hilon,1),size(hilon,2),length(mgrpu));
 
-            for m = 1:length(mgrpu)
-               nd(:,m) = sum(datlong(:,mgrp==mgrpu(m))>0,2);
-            end  
+            %for m = 1:length(mgrpu)
+            %   nd(:,m) = sum(datlong(:,mgrp==mgrpu(m))>0,2);
+            %end  
+            for tt = 1:size(datlong,2)
+                % interpolate raw outTR hourly data to finer spatial resolution
+                F = scatteredInterpolant(double(wrflonl(fin)), double(wrflatl(fin)), datlong(:,tt));
+                dat_f = F(xoutc,youtc); 
+                dat_f = interp2(xoutc, youtc, dat_f, xout,yout);
+                dat_fine = reshape(dat_f, size(hilon));
+                %figure(1);clf;imagesc(dat_fine);colorbar();
+                dat_fine = dat_fine > 0;
+                nd(:,:,mgrp(tt)) = nd(:,:,mgrp(tt)) + dat_fine;
+            end
+            clear F dat_f dat_fine mgrpu
         end
         
        % tic
         for tt = 1:size(datlong,2) % for each time step
             % identify month to use for lapse rates
-%            tic
-           % mm = ymgrp(datetime(cal) == datetime(yrcal(tt,:))); % 0.0374
-%toc % 0.01s
-%tic
-            mm = ymgrp(yrcalind(tt)); % 0.0374
-%toc
+            mm = ymgrp(yrcalind(tt));
+
             % interpolate raw outTR hourly data to finer spatial resolution
-            %tic
-            F = scatteredInterpolant(double(wrflonl(fin)), double(wrflatl(fin)), datlong(:,tt));%.0087
-            dat_f = F(xoutc,youtc); %0.661
+            F = scatteredInterpolant(double(wrflonl(fin)), double(wrflatl(fin)), datlong(:,tt));
+            dat_f = F(xoutc,youtc); 
             dat_f = interp2(xoutc, youtc, dat_f, xout,yout);
-            %toc % 0.01s
             %figure(2);clf; scatter(xout, yout, 24, dat_f,'filled');colorbar();
-%tic
-            dat_fine = reshape(dat_f, size(hilon));%0.0025
-%toc % 0.002s
+
+            dat_fine = reshape(dat_f, size(hilon));
+
             % apply bias and lapse rate corrections
             %tic
             if vv==2 % if ppt
                 dat_fine = dat_fine .* ratppt_fine(:,:,mm);
-                nds = nd(:,mgrp(tt));
+                %nds = nd(:,mgrp(tt));
                 % interpolate # of ppt time steps to fine res
-                F = scatteredInterpolant(double(wrflonl(fin)), double(wrflatl(fin)), nds);
-                nds = F(xoutc,youtc);
-                nds = interp2(xoutc, youtc, nds, xout, yout);
-                nds = reshape(nds, size(lr_fine,1),size(lr_fine,2));
+                %F = scatteredInterpolant(double(wrflonl(fin)), double(wrflatl(fin)), nds);
+                %nds = F(xoutc,youtc);
+                %nds = interp2(xoutc, youtc, nds, xout, yout);
+                %nds = reshape(nds, size(lr_fine,1),size(lr_fine,2));
+                nds = nd(:,:,mgrp(tt));
                 lapse = lr_fine(:,:,mm)./nds;
                 datdown1 = (lapse .* (hielev-reshape(wrfelevfine,size(hielev)))) + dat_fine; %0.008 
                 datdown1(dat_fine ==0) = 0;
@@ -458,7 +464,9 @@ for vv = 1:length(varnms)
     
     datdown = single(datdown);
     
-    if vv==4 % WIND
+    if vv==3 % Q2
+        datdown(datdown < 0.00005) = 0.00005;
+    elseif ismember(vv, [1,2,4]) % LW, PPT or WIND
         datdown(datdown<0)=0;
     end
     
