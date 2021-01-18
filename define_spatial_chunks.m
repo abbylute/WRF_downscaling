@@ -97,7 +97,7 @@ for ii = 1:size(st_row,2)
     %end
     
     % also check if outside of bounds:
-    if (max(max(ilat))<30.99 || max(max(ilon))>-102.99)
+    if (max(max(ilat))<30.99 || max(max(ilon))>-102.99 || (min(min(ilon))>-105 && max(max(ilat))<31.4))
         in_us(ii) = 0;
     end
 end
