@@ -49,8 +49,8 @@ finechunks = matfile([outdir,'chunks/chunk_coordinates_',num2str(outSRf),'m.mat'
 finechunks = finechunks.chunk_coords;
 nchunk = size(finechunks.st_col,2);
 
-%for ch = 1:nchunk
-    ch=35;%NCASC; %ch=62;%Olympics %ch=45;%GNP
+parfor ch = 1:nchunk
+    %ch=291;%NCASC; %ch=62;%Olympics %ch=45;%GNP
     
     if finechunks.in_us(ch)==1 % if inside the us, skip this chunk
     
@@ -80,7 +80,7 @@ nchunk = size(finechunks.st_col,2);
         toc
     end % if in us
 
-%end
+end
 
 
 
