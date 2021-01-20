@@ -23,7 +23,7 @@
   }
 
 # so that rgdal will load:
-  dyn.load("/opt/modules/climatology/gdal/3.0.2/lib/libgdal.so") # on thunder
+#  dyn.load("/opt/modules/climatology/gdal/3.0.2/lib/libgdal.so") # on thunder
   
 require(raster)
 require(insol)
