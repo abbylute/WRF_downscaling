@@ -9,7 +9,7 @@ function[outlonf, outlatf, outlonc, outlatc] = pick_modeling_locations(ch, outDE
 
 
 % preallocate output
-outlonc = ones(0,1);
+outlonc = ones(0,1,'single');
 outlatc = outlonc;
 outelevc = outlonc;
 
