@@ -59,10 +59,10 @@ function[] = downscale_WRF_solar(ch, tcfilename, wrfhdir, outTR, outSR, era, ...
     wrflatsub = reshape(wrflatsub, size(wrflatsub,1)*size(wrflatsub,2),1);
 
     % find wrf cells that are closest to each point of interest
-    dists = pdist2(single([outlon outlat]), single([wrflonsub wrflatsub]));
-    for dd=1:size(dists,1) 
-        fsm(dd) = find(dists(dd,:) == min(dists(dd,:)));
-    end
+    %dists = pdist2(single([outlon outlat]), single([wrflonsub wrflatsub]));
+    %for dd=1:size(dists,1) 
+    %    fsm(dd) = find(dists(dd,:) == min(dists(dd,:)));
+    %end
     
     for yy = 1:14
         ymdh = find(cal(:,1) == yrs(yy));
