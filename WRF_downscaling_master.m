@@ -37,10 +37,10 @@ reggmttz = -7; % GMT timezone of the full domain
 %% Define spatial chunks
 
 % at finer resolution:
-define_spatial_chunks(outDEMf, outSRf, chunksize, buffer, outdir, us_latlon)
+%define_spatial_chunks(outDEMf, outSRf, chunksize, buffer, outdir, us_latlon)
 
 % at medium resolution:
-define_spatial_chunks(outDEMc, outSRc, chunksize, buffer, outdir, us_latlon)
+%define_spatial_chunks(outDEMc, outSRc, chunksize, buffer, outdir, us_latlon)
 
 
 %% For each spatial chunk,
