@@ -47,12 +47,14 @@ reggmttz = -7; % GMT timezone of the full domain
 
 finechunks = matfile([outdir,'chunks/chunk_coordinates_',num2str(outSRf),'m.mat']);
 finechunks = finechunks.chunk_coords;
+in_us = finechunks.in_us;
 nchunk = size(finechunks.st_col,2);
+clear finechunks
 
 parfor ch = 1:nchunk
-    %ch=291;%NCASC; %ch=62;%Olympics %ch=45;%GNP
+   %ch=42; %ch=291;%NCASC; %ch=62;%Olympics %ch=45;%GNP
     
-    if finechunks.in_us(ch)==1 % if inside the us, skip this chunk
+    if in_us(ch)==1 % if inside the us, skip this chunk
     
         % define where to model at what resolution
         [outlonf, outlatf, outlonc, outlatc] = pick_modeling_locations(ch, outDEMf, outDEMc, outSRf, outSRc, elev_dif_thres, solar_dif_thres, outdir);
