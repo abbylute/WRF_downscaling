@@ -91,13 +91,13 @@ function[] = downscale_WRF_lapse_rates(ch, outSR, inDEM, outDEM, outDEMtif,...
     wrfmincol = min(wrfcol); wrfmaxcol = max(wrfcol);
     
     % check that we are picking the right points:
-    figure(1);clf;
-    plot(outer_coords(:,1),outer_coords(:,2)); hold on;
-    plot(inner_coords(:,1),inner_coords(:,2));
-    plot(wrflonl(in), wrflatl(in), '.');
+    %figure(1);clf;
+    %plot(outer_coords(:,1),outer_coords(:,2)); hold on;
+    %plot(inner_coords(:,1),inner_coords(:,2));
+    %plot(wrflonl(in), wrflatl(in), '.');
     
     
-    plot(reshape(xoutc,size(xoutc,1)*size(xoutc,2),1), reshape(youtc,size(youtc,1)*size(youtc,2),1),'.');
+    %plot(reshape(xoutc,size(xoutc,1)*size(xoutc,2),1), reshape(youtc,size(youtc,1)*size(youtc,2),1),'.');
     
      cal = datevec(datetime(2000,10,1,0,0,0):hours(outTR):datetime(2013,9,30,23,0,0));
      ym = cal(:,1:2);
