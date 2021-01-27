@@ -129,9 +129,6 @@ vartime = tic;
 
 % create file to save to:
 m = matfile([outdir,era,'/',char(varnm),'/',char(varnm),'_',era,'_',num2str(outSR),'m_chunk',num2str(ch),'.mat'],'Writable',true');
-
-% preallocate output
-%datdown = ones(size(hilon,1), size(hilon,2), size(cal,1)) * NaN;
         
     for yy = 1:length(yrs) % for each yearly file
 
@@ -144,17 +141,12 @@ m = matfile([outdir,era,'/',char(varnm),'/',char(varnm),'_',era,'_',num2str(outS
         lr = single(ones(nwrf,length(ymdh)))*NaN;
 
 
-        % create subsets of lon, lat, elev, land to match the subset used for
-        % datall
-        %rr1 = max(wrfminrow-side,1);
-        %rr2 = min(wrfmaxrow+side,size(wrflat,1));
-        %cc1 = max(wrfmincol-side,1);
-        %cc2 = min(wrfmaxcol+side,size(wrflat,2));
-        wrflont = wrflon(rr1:rr2, cc1:cc2);
-        wrflatt = wrflat(rr1:rr2, cc1:cc2);
-        wrfelevt = wrfelev(rr1:rr2, cc1:cc2);
-        wrflandt = wrfland(rr1:rr2, cc1:cc2);
-    
+        % create subsets of lon, lat, elev, land to match the subset used for datall
+        wrflont = wrflon((wrfminrow-side):(wrfmaxrow+side), (wrfmincol-side):(wrfmaxcol+side));
+        wrflatt = wrflat((wrfminrow-side):(wrfmaxrow+side), (wrfmincol-side):(wrfmaxcol+side));
+        wrfelevt = wrfelev((wrfminrow-side):(wrfmaxrow+side), (wrfmincol-side):(wrfmaxcol+side));
+        wrflandt = wrfland((wrfminrow-side):(wrfmaxrow+side), (wrfmincol-side):(wrfmaxcol+side));
+
         % Calculate hourly lapse rates
 
         for pp = 1:nwrf
