@@ -146,10 +146,14 @@ m = matfile([outdir,era,'/',char(varnm),'/',char(varnm),'_',era,'_',num2str(outS
 
         % create subsets of lon, lat, elev, land to match the subset used for
         % datall
-        wrflont = wrflon((wrfminrow-side):(wrfmaxrow+side), (wrfmincol-side):(wrfmaxcol+side));
-        wrflatt = wrflat((wrfminrow-side):(wrfmaxrow+side), (wrfmincol-side):(wrfmaxcol+side));
-        wrfelevt = wrfelev((wrfminrow-side):(wrfmaxrow+side), (wrfmincol-side):(wrfmaxcol+side));
-        wrflandt = wrfland((wrfminrow-side):(wrfmaxrow+side), (wrfmincol-side):(wrfmaxcol+side));
+        %rr1 = max(wrfminrow-side,1);
+        %rr2 = min(wrfmaxrow+side,size(wrflat,1));
+        %cc1 = max(wrfmincol-side,1);
+        %cc2 = min(wrfmaxcol+side,size(wrflat,2));
+        wrflont = wrflon(rr1:rr2, cc1:cc2);
+        wrflatt = wrflat(rr1:rr2, cc1:cc2);
+        wrfelevt = wrfelev(rr1:rr2, cc1:cc2);
+        wrflandt = wrfland(rr1:rr2, cc1:cc2);
     
         % Calculate hourly lapse rates
 
