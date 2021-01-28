@@ -262,10 +262,10 @@ m = matfile([outdir,era,'/',char(varnm),'/',char(varnm),'_',era,'_',num2str(outS
     
     
 %% Downscale LW, PPT, Q2, WIND
-r1 = 121;
+r1 = 110;
 r2 = 609;
-c1 = 281;
-c2 = 839;
+c1 = 255;
+c2 = 860;
 
 for vv = 1:length(varnms)
         vartime = tic;
@@ -595,7 +595,7 @@ end % end variables
     stoc = toc(savetime);
     vtoc = toc(vartime);
     disp(['running ',char(varnm),' took ',num2str(vtoc/60),' minutes.']);
-    disp(['saving ',char(varnm),' took ',num2str(stoc/60),' minutes.']);
+    disp(['saving ',char(varnm),' took ',num2str(stoc/60),' minutescd ../W.']);
 
 
 end % end function
