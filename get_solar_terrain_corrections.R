@@ -87,7 +87,7 @@ demflat <- aggregate(demfine,
 
 # then interpolate the flat dem to fine resolution to avoid spatial chunkiness in the terrain corrections
 #demflat <- projectRaster(demflat, demfine, res = res(demfine))
-demflat <- disaggregate(demflat, fact=round(4000/demres), method='bilinear')
+#demflat <- disaggregate(demflat, fact=round(4000/demres), method='bilinear')
 
 # 3. Set Parameters:
 #-------------------------
@@ -131,10 +131,10 @@ for (mm in 1:12){
   for (tt in 1:length(ts)){ # for each time interval b/n sunrise and sunset:
     srs = ts[tt]
     
-    if (srs<day1[1] | srs>day1[2]){ # if hr is during dark, no terrain correction
+    if (srs<=day1[1] | srs>=day1[2]){ # if hr is during dark, no terrain correction
       solar_tc[, mm, tt] <- 1
     
-    } else if (srs>=day1[1] & srs<=day1[2]) { # if hr is during daylight then run solar routine
+    } else if (srs>day1[1] & srs<day1[2]) { # if hr is during daylight then run solar routine
         hr_min = strsplit(as.character(srs),"\\.")
         hr = as.numeric(hr_min[[1]][1])
         minu = as.numeric(hr_min[[1]][2]); minu[is.na(minu)] <- 0;
@@ -174,8 +174,8 @@ for (mm in 1:12){
       
       #Irrflat <- crop(Irrflat, extent(Irr))
       
-      #Ifnew <- disaggregate(Irrflat,4000/demres)
-      Ifnew <- crop(Irrflat, extent(Irr))
+      Ifnew <- disaggregate(Irrflat, 4000/demres, method = 'bilinear')
+      Ifnew <- crop(Ifnew, extent(Irr))
   
       # calculate ratio and assign it to output
       rat <- Irr/Ifnew
