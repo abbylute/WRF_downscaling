@@ -571,7 +571,10 @@ end % end variables
     
     % trim to chunk
     for pp = 1:nwrf
-        [rowpicks, colpicks] = find(wrflon == wrflonl(fin(pp)) & wrflat == wrflatl(fin(pp)));
+
+        
+        
+        
         montrim(pp,:) = mon(rowpicks,colpicks);
     end
 
