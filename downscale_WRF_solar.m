@@ -28,7 +28,8 @@ function[] = downscale_WRF_solar(ch, tcfilename, wrfhdir, outTR, outSR, era, ...
     % change
     tc(isnan(tc)) = 1;
     % quality check- don't allow super outrageous correction factors
-    %tc(tc > 5) = 5;
+    tc(tc > 5) = 5;
+    tc(tc < .1) = .1;
     
     % reshape tc
     %tc = reshape(tc, nsites, size(tc,2)/nt, nt); % sites, month/day, hour
