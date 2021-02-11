@@ -71,5 +71,5 @@ for chu = 1:nchunk
 end
 
 save('/Volumes/WDPassport/DATA/WRF/Downscaled/cmip5_preindustrial_median_deltas_for_WRF_chunks.mat',...
-    'dhusswrf','dlradwrf','dpptwrf','dsradwrf','dwindwrf','dtmeanwrf')
+    'dhusswrf','dlradwrf','dpptwrf','dsradwrf','dwindwrf','dtmeanwrf','-v7.3')
 
