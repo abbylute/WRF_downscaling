@@ -154,6 +154,7 @@ for (mm in 1:12){
       hr_min = strsplit(as.character(srs),"\\.")
       hr = as.numeric(hr_min[[1]][1])
       minu = hr_min[[1]][2];
+      minu[is.na(minu)] <- 0
       if (nchar(minu)<2) {
         minu = paste0(minu,'0')
       }
