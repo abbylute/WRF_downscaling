@@ -135,9 +135,25 @@ for (mm in 1:12){
       solar_tc[, mm, tt] <- 1
     
     } else if (srs>day1[1] & srs<day1[2]) { # if hr is during daylight then run solar routine
-        hr_min = strsplit(as.character(srs),"\\.")
-        hr = as.numeric(hr_min[[1]][1])
-        minu = as.numeric(hr_min[[1]][2]); minu[is.na(minu)] <- 0;
+      if (day1[1,2]-srs < .5 & day1[1,2]-srs > 0){ # if timestep is half an hour or less before sunset
+        # then run the terrain corrections for half an hour earlier, and then average the 
+        # final ratios with all ones. This is to avoid crazy high correction values when
+        # the sun is really low.
+        srs = srs-.5
+        adj = T
+      } else if (srs-day1[1,1] < .5 & srs-day1[1,1] > 0){# if timestep is half an hour or less after sunrise
+        # then run the terrain corrections for half an hour later, and then average the
+        # final ratios with all ones.
+        srs = srs + .5
+        adj = T
+      } else {
+        adj = F # no adjustment
+      }
+        
+      hr_min = strsplit(as.character(srs),"\\.")
+      hr = as.numeric(hr_min[[1]][1])
+      minu = as.numeric(str_pad(hr_min[[1]][2],2,'right','0')); minu[is.na(minu)] <- 0;
+      minu = minu/100*60
         
       jd=JDymd(year,mm,day,hour=hr,minute=minu)
       sv=sunvector(jd,mlat,mlon,tmz)
@@ -175,10 +191,16 @@ for (mm in 1:12){
       #Irrflat <- crop(Irrflat, extent(Irr))
       
       Ifnew <- disaggregate(Irrflat, 4000/demres, method = 'bilinear')
+      Ifnew[Ifnew<0] <- 0
       Ifnew <- crop(Ifnew, extent(Irr))
   
       # calculate ratio and assign it to output
       rat <- Irr/Ifnew
+      
+      # if adjustment is required, apply it here
+      if (adj == T){
+        values(rat) <- (values(rat) + 1)/2
+      }
       
       # transform back to lat lon
       rat <- projectRaster(rat, demorig)
