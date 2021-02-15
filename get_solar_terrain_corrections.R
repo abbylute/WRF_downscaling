@@ -32,6 +32,7 @@ require(R.matlab)
 require(Rcpp)
 require(rgdal)
 
+
   # to install additional package to use in R from Matlab on thunder, log onto 
   # matlabuser on thunder, module load R, R, install.packages("package")
 
@@ -152,7 +153,12 @@ for (mm in 1:12){
         
       hr_min = strsplit(as.character(srs),"\\.")
       hr = as.numeric(hr_min[[1]][1])
-      minu = as.numeric(str_pad(hr_min[[1]][2],2,'right','0')); minu[is.na(minu)] <- 0;
+      minu = hr_min[[1]][2];
+      if (nchar(minu)<2) {
+        minu = paste0(minu,'0')
+      }
+      minu <- as.numeric(minu)
+      minu[is.na(minu)] <- 0;
       minu = minu/100*60
         
       jd=JDymd(year,mm,day,hour=hr,minute=minu)
