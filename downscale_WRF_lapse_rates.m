@@ -123,147 +123,147 @@ function[] = downscale_WRF_lapse_rates(ch, outSR, inDEM, outDEM, outDEMtif,...
 % disp(['running ACSWDNB took ',num2str(vtoc/60),' minutes.']);
 % 
     
-%% Downscale temperature
-varnm = 'T2';
-vartime = tic;
-
-% create file to save to:
-m = matfile([outdir,era,'/',char(varnm),'/',char(varnm),'_',era,'_',num2str(outSR),'m_chunk',num2str(ch),'.mat'],'Writable',true');
-        
-    for yy = 1:length(yrs) % for each yearly file
-
-        filenm = [wrfhdir,era,'/',char(varnm),'/',char(varnm),'_',era,'_trimmed_',num2str(outTR),'hr_',num2str(yrs(yy)),'.mat'];
-        datall = matfile(filenm);
-        datall = single(datall.outdata((wrfminrow-side):(wrfmaxrow+side), (wrfmincol-side):(wrfmaxcol+side),:));
-
-        ymdh = find(cal(:,1) == yrs(yy));
-
-        lr = single(ones(nwrf,length(ymdh)))*NaN;
-
-
-        % create subsets of lon, lat, elev, land to match the subset used for datall
-        wrflont = wrflon((wrfminrow-side):(wrfmaxrow+side), (wrfmincol-side):(wrfmaxcol+side));
-        wrflatt = wrflat((wrfminrow-side):(wrfmaxrow+side), (wrfmincol-side):(wrfmaxcol+side));
-        wrfelevt = wrfelev((wrfminrow-side):(wrfmaxrow+side), (wrfmincol-side):(wrfmaxcol+side));
-        wrflandt = wrfland((wrfminrow-side):(wrfmaxrow+side), (wrfmincol-side):(wrfmaxcol+side));
-
-        % Calculate hourly lapse rates
-
-        for pp = 1:nwrf
-            [rowpicks, colpicks] = find(wrflont == wrflonl(fin(pp)) & wrflatt == wrflatl(fin(pp)));
-            rowpicks = (rowpicks - side):(rowpicks + side);
-            rowpicks = rowpicks(rowpicks > 0 & rowpicks <= size(wrfelevt,1));
-            colpicks = (colpicks - side):(colpicks + side);
-            colpicks = colpicks(colpicks > 0 & colpicks <= size(wrfelevt,2));
-            ncell = length(rowpicks)*length(colpicks);
-            
-            elev = wrfelevt(rowpicks,colpicks);
-            land = wrflandt(rowpicks,colpicks);
-            elev = reshape(elev, ncell, 1);
-            land = reshape(land, ncell, 1);
-            elev = elev(land==1);
-            %X = [ones(length(elev),1) elev];
-
-           for tt = 1:length(ymdh)
-                dat = datall(rowpicks,colpicks,tt);
-                dat = reshape(dat, ncell, 1);
-                dat = dat(land==1);
-                % calculate lapse rate
-                [p,~,mu]=polyfit(elev,dat,1);
-                lr(pp,tt) = p(1)/mu(2); % per m
-
-                %b = X\dat;
-                %lr(pp,tt) = b(2); % per m
-            end % end months
-        end % end wrf points
-        clear dat elev land X b pp rowpicks colpicks ncell
-        %figure(1);clf;scatter(wrflonl(fin),wrflatl(fin),45,lr(:,1),'filled');colorbar();
-
-        
-        %--- Interpolate lapse rates to high resolution ---%   
-        lr_fine = single(ones(size(hilon,1),size(hilon,2),length(ymdh)))*NaN;
-        
-        for tt = 1:length(ymdh) % ~ 10 minutes for yy=1
-            F = scatteredInterpolant(double([wrflonl(fin), wrflatl(fin)]), double(lr(:,tt)));
-            lr_f = F(double(xoutc),double(youtc));
-            lr_f = interp2(xoutc, youtc, lr_f, xout, yout);
-            %figure(2);clf; scatter(xout, yout, 24, lr_fine,'filled');colorbar();     
-            lr_fine(:,:,tt) = reshape(lr_f, size(hilon));
-        end
-        clear F lr_f lr tt
-
-
-        % trim data to chunk
-        %datall = datall(wrfminrow:wrfmaxrow, wrfmincol:wrfmaxcol,:);
-        datall = datall((side+1):(size(datall,1)-side), (side+1):(size(datall,2)-side),:);
-        
-        % extract desired spatial points: 
-        datlong = single(ones(nwrf, size(ymdh,1))) * NaN;
-        for ii= 1:nwrf
-            datlong(ii,:) = datall((wrfrow(ii)-wrfminrow+1), (wrfcol(ii)-wrfmincol+1), :); 
-        end
-        clear datall ii
-
-        % preallocate output
-        datdown = single(ones(size(hilon,1), size(hilon,2), size(ymdh,1))) * NaN;
-        
-        % for each time step
-        % - spatially interpolate hourly data
-        % - apply lapse rate correction
-
-        for tt = 1:size(datlong,2) % for each time step
-            % interpolate raw outTR hourly data to finer spatial resolution
-            F = scatteredInterpolant(double(wrflonl(fin)), double(wrflatl(fin)), double(datlong(:,tt)));
-            dat_f = F(double(xoutc),double(youtc)); 
-            dat_f = interp2(xoutc, youtc, dat_f, xout,yout);
-            
-            %figure(2);clf; scatter(xout, yout, 24, dat_f,'filled');colorbar();
-            dat_fine = reshape(dat_f, size(hilon));
-
-            % apply lapse rate correction
-            datdown(:,:,tt) = (lr_fine(:,:,tt) .* (hielev-reshape(wrfelevfine,size(hielev)))) + dat_fine;
-            clear F dat_f dat_fine
-        end % end time steps
-        clear datlong lr_fine
-        
-            
-        % extract points to model at
-        datdown = reshape(datdown, size(datdown,1)*size(datdown,2), size(datdown,3));
-        [~,i] = ismember([outlon,outlat], [hilonl,hilatl], 'rows');
-        datdown = datdown(i,:); 
-
-        % round to desired precision
-        datdown = round(datdown, 1); % to the 10th
-
-        % save outputs
-        m.datdown(1:size(outlon,1), ymdh) = datdown;
-        
-        clear datdown
-    end % end years
-
-    %datdown = single(datdown);
-
-    
-%     % extract points to model at
-%     datdown = reshape(datdown, size(datdown,1)*size(datdown,2), size(datdown,3));
-%     [~,i] = ismember([outlon,outlat], [hilonl,hilatl], 'rows');
-%     datdown = datdown(i,:); 
+% %% Downscale temperature
+% varnm = 'T2';
+% vartime = tic;
 % 
-%     % round to desired precision
-%     datdown = round(datdown, 1); % to the 10th
+% % create file to save to:
+% m = matfile([outdir,era,'/',char(varnm),'/',char(varnm),'_',era,'_',num2str(outSR),'m_chunk',num2str(ch),'.mat'],'Writable',true');
+%         
+%     for yy = 1:length(yrs) % for each yearly file
+% 
+%         filenm = [wrfhdir,era,'/',char(varnm),'/',char(varnm),'_',era,'_trimmed_',num2str(outTR),'hr_',num2str(yrs(yy)),'.mat'];
+%         datall = matfile(filenm);
+%         datall = single(datall.outdata((wrfminrow-side):(wrfmaxrow+side), (wrfmincol-side):(wrfmaxcol+side),:));
+% 
+%         ymdh = find(cal(:,1) == yrs(yy));
+% 
+%         lr = single(ones(nwrf,length(ymdh)))*NaN;
 % 
 % 
-%     % Save downscaled data
-%     savetime = tic;
-%     save([outdir,era,'/',char(varnm),'/',char(varnm),'_',era,'_',num2str(outSR),'m_chunk',num2str(ch),'.mat'],'datdown','-v7.3');
-%     stoc = toc(savetime);
-     vtoc = toc(vartime);
-     disp(['running ',char(varnm),' took ',num2str(vtoc/60),' minutes.']);
-%     disp(['saving ',char(varnm),' took ',num2str(stoc/60),' minutes.']);
-
+%         % create subsets of lon, lat, elev, land to match the subset used for datall
+%         wrflont = wrflon((wrfminrow-side):(wrfmaxrow+side), (wrfmincol-side):(wrfmaxcol+side));
+%         wrflatt = wrflat((wrfminrow-side):(wrfmaxrow+side), (wrfmincol-side):(wrfmaxcol+side));
+%         wrfelevt = wrfelev((wrfminrow-side):(wrfmaxrow+side), (wrfmincol-side):(wrfmaxcol+side));
+%         wrflandt = wrfland((wrfminrow-side):(wrfmaxrow+side), (wrfmincol-side):(wrfmaxcol+side));
+% 
+%         % Calculate hourly lapse rates
+% 
+%         for pp = 1:nwrf
+%             [rowpicks, colpicks] = find(wrflont == wrflonl(fin(pp)) & wrflatt == wrflatl(fin(pp)));
+%             rowpicks = (rowpicks - side):(rowpicks + side);
+%             rowpicks = rowpicks(rowpicks > 0 & rowpicks <= size(wrfelevt,1));
+%             colpicks = (colpicks - side):(colpicks + side);
+%             colpicks = colpicks(colpicks > 0 & colpicks <= size(wrfelevt,2));
+%             ncell = length(rowpicks)*length(colpicks);
+%             
+%             elev = wrfelevt(rowpicks,colpicks);
+%             land = wrflandt(rowpicks,colpicks);
+%             elev = reshape(elev, ncell, 1);
+%             land = reshape(land, ncell, 1);
+%             elev = elev(land==1);
+%             %X = [ones(length(elev),1) elev];
+% 
+%            for tt = 1:length(ymdh)
+%                 dat = datall(rowpicks,colpicks,tt);
+%                 dat = reshape(dat, ncell, 1);
+%                 dat = dat(land==1);
+%                 % calculate lapse rate
+%                 [p,~,mu]=polyfit(elev,dat,1);
+%                 lr(pp,tt) = p(1)/mu(2); % per m
+% 
+%                 %b = X\dat;
+%                 %lr(pp,tt) = b(2); % per m
+%             end % end months
+%         end % end wrf points
+%         clear dat elev land X b pp rowpicks colpicks ncell
+%         %figure(1);clf;scatter(wrflonl(fin),wrflatl(fin),45,lr(:,1),'filled');colorbar();
+% 
+%         
+%         %--- Interpolate lapse rates to high resolution ---%   
+%         lr_fine = single(ones(size(hilon,1),size(hilon,2),length(ymdh)))*NaN;
+%         
+%         for tt = 1:length(ymdh) % ~ 10 minutes for yy=1
+%             F = scatteredInterpolant(double([wrflonl(fin), wrflatl(fin)]), double(lr(:,tt)));
+%             lr_f = F(double(xoutc),double(youtc));
+%             lr_f = interp2(xoutc, youtc, lr_f, xout, yout);
+%             %figure(2);clf; scatter(xout, yout, 24, lr_fine,'filled');colorbar();     
+%             lr_fine(:,:,tt) = reshape(lr_f, size(hilon));
+%         end
+%         clear F lr_f lr tt
+% 
+% 
+%         % trim data to chunk
+%         %datall = datall(wrfminrow:wrfmaxrow, wrfmincol:wrfmaxcol,:);
+%         datall = datall((side+1):(size(datall,1)-side), (side+1):(size(datall,2)-side),:);
+%         
+%         % extract desired spatial points: 
+%         datlong = single(ones(nwrf, size(ymdh,1))) * NaN;
+%         for ii= 1:nwrf
+%             datlong(ii,:) = datall((wrfrow(ii)-wrfminrow+1), (wrfcol(ii)-wrfmincol+1), :); 
+%         end
+%         clear datall ii
+% 
+%         % preallocate output
+%         datdown = single(ones(size(hilon,1), size(hilon,2), size(ymdh,1))) * NaN;
+%         
+%         % for each time step
+%         % - spatially interpolate hourly data
+%         % - apply lapse rate correction
+% 
+%         for tt = 1:size(datlong,2) % for each time step
+%             % interpolate raw outTR hourly data to finer spatial resolution
+%             F = scatteredInterpolant(double(wrflonl(fin)), double(wrflatl(fin)), double(datlong(:,tt)));
+%             dat_f = F(double(xoutc),double(youtc)); 
+%             dat_f = interp2(xoutc, youtc, dat_f, xout,yout);
+%             
+%             %figure(2);clf; scatter(xout, yout, 24, dat_f,'filled');colorbar();
+%             dat_fine = reshape(dat_f, size(hilon));
+% 
+%             % apply lapse rate correction
+%             datdown(:,:,tt) = (lr_fine(:,:,tt) .* (hielev-reshape(wrfelevfine,size(hielev)))) + dat_fine;
+%             clear F dat_f dat_fine
+%         end % end time steps
+%         clear datlong lr_fine
+%         
+%             
+%         % extract points to model at
+%         datdown = reshape(datdown, size(datdown,1)*size(datdown,2), size(datdown,3));
+%         [~,i] = ismember([outlon,outlat], [hilonl,hilatl], 'rows');
+%         datdown = datdown(i,:); 
+% 
+%         % round to desired precision
+%         datdown = round(datdown, 1); % to the 10th
+% 
+%         % save outputs
+%         m.datdown(1:size(outlon,1), ymdh) = datdown;
+%         
+%         clear datdown
+%     end % end years
+% 
+%     %datdown = single(datdown);
 % 
 %     
-%     
+% %     % extract points to model at
+% %     datdown = reshape(datdown, size(datdown,1)*size(datdown,2), size(datdown,3));
+% %     [~,i] = ismember([outlon,outlat], [hilonl,hilatl], 'rows');
+% %     datdown = datdown(i,:); 
+% % 
+% %     % round to desired precision
+% %     datdown = round(datdown, 1); % to the 10th
+% % 
+% % 
+% %     % Save downscaled data
+% %     savetime = tic;
+% %     save([outdir,era,'/',char(varnm),'/',char(varnm),'_',era,'_',num2str(outSR),'m_chunk',num2str(ch),'.mat'],'datdown','-v7.3');
+% %     stoc = toc(savetime);
+%      vtoc = toc(vartime);
+%      disp(['running ',char(varnm),' took ',num2str(vtoc/60),' minutes.']);
+% %     disp(['saving ',char(varnm),' took ',num2str(stoc/60),' minutes.']);
+% 
+% % 
+% %     
+% %     
 %% Downscale LW, PPT, Q2, WIND
 r1 = 110;
 r2 = 609;
@@ -349,7 +349,7 @@ for vv = 1:length(varnms)
                 dat = dat(land==1);
                 % calculate lapse rate and y intercept
                    [p,~,mu]=polyfit(elev,dat,1);
-                   lr(pp,tt) = p(1)/mu(2); % per m
+                   lr(pp,mm) = p(1)/mu(2); % per m
 
                 %b = X\dat;
                 %lr(pp,mm) = b(2); % per m
