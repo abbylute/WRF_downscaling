@@ -565,9 +565,9 @@ c2 = 860;
         dat = dat(land==1);
         % calculate lapse rate and y intercept
         [p,~,mu]=polyfit(elev,dat,1);
-        lr(pp,mm) = p(1)/mu(2); % per m
+        lr(pp,1) = p(1)/mu(2); % per m
     end % end wrf points
-    clear rowpicks colpicks ncell mon dat elev land p mu
+    clear rowpicks colpicks ncell dat elev land p mu
     %figure(1);clf;scatter(wrflonl(fin),wrflatl(fin),25,lr(:,1),'filled');colorbar();
 
     
@@ -582,7 +582,8 @@ c2 = 860;
 
     % trim to chunk
     montrim = ones(nwrf,1).*NaN;
-    for pp = 1:nwrf   
+    for pp = 1:nwrf  
+        [rowpicks, colpicks] = find(wrflon == wrflonl(fin(pp)) & wrflat == wrflatl(fin(pp)));
         montrim(pp,:) = mon(rowpicks,colpicks); % datlong
     end
     
@@ -607,12 +608,7 @@ c2 = 860;
     datdown = reshape(datdown, size(datdown,1)*size(datdown,2), 1);
     [~,i] = ismember([outlon,outlat], [hilonl,hilatl], 'rows');
     datdown = datdown(i,:); 
-    
-
-    % extract points to model at
-    %[~,i] = ismember([outlon,outlat], [hilonl,hilatl], 'rows');
-    %datdown = datdown(i,:); 
-    
+        
     % round to desired precision
     datdown = round(datdown/100,1)*100; % round to 10th of hPa or mb
     
