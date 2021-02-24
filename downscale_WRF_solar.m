@@ -9,7 +9,7 @@ function[] = downscale_WRF_solar(ch, tcfilename, wrfhdir, outTR, outSR, era, ...
     m = matfile([outdir,era,'/',char(varnm),'/',char(varnm),'_',era,'_',num2str(outSR),'m_chunk',num2str(ch),'.mat'],'Writable',true);
     
     % set up cal
-    cal = int16(datevec(datetime(2000,10,1,0,0,0):hours(4):datetime(2013,9,30,23,0,0)));
+    cal = int16(datevec(datetime(2000,10,1,0,0,0):hours(outTR):datetime(2013,9,30,23,0,0)));
     yrs = unique(cal(:,1));
     
     % load terrain corrections:
