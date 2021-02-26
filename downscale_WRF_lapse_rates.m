@@ -110,18 +110,18 @@ function[] = downscale_WRF_lapse_rates(ch, outSR, inDEM, outDEM, outDEMtif,...
 % --- Downscale each variable ---%
 
 %% Downscale Solar
-% vartime = tic;
-% [paramfilename,tcfilename] = write_solar_paramfile(ch, inDEM, outSR, outDEMtif, outlon, outlat, outTR, era, solarparamdir, outdir, reggmttz);
-% system([pathtoR,' --vanilla ',solartcRscript,' ',paramfilename]);
-% 
-%  downscale_WRF_solar(ch, tcfilename, wrfhdir, outTR, outSR, era, ...
-%      wrflon, wrflat, wrfminrow, wrfmaxrow, wrfmincol, wrfmaxcol, ...
-%      outlon, outlat, outdir, xoutc, youtc, xout, yout)
-% clear paramfilename tcfilename
-% 
-% vtoc = toc(vartime);
-% disp(['running ACSWDNB took ',num2str(vtoc/60),' minutes.']);
-% 
+vartime = tic;
+[paramfilename,tcfilename] = write_solar_paramfile(ch, inDEM, outSR, outDEMtif, outlon, outlat, outTR, era, solarparamdir, outdir, reggmttz);
+system([pathtoR,' --vanilla ',solartcRscript,' ',paramfilename]);
+
+ downscale_WRF_solar(ch, tcfilename, wrfhdir, outTR, outSR, era, ...
+     wrflon, wrflat, wrfminrow, wrfmaxrow, wrfmincol, wrfmaxcol, ...
+     outlon, outlat, outdir, xoutc, youtc, xout, yout)
+clear paramfilename tcfilename
+
+vtoc = toc(vartime);
+disp(['running ACSWDNB took ',num2str(vtoc/60),' minutes.']);
+
     
 % %% Downscale temperature
 % varnm = 'T2';
@@ -265,10 +265,10 @@ function[] = downscale_WRF_lapse_rates(ch, outSR, inDEM, outDEM, outDEMtif,...
 % %     
 % %     
 %% Downscale LW, PPT, Q2, WIND
-r1 = 110;
-r2 = 609;
-c1 = 255;
-c2 = 860;
+% r1 = 110;
+% r2 = 609;
+% c1 = 255;
+% c2 = 860;
 
 % for vv = 1:length(varnms)
 %         vartime = tic;
