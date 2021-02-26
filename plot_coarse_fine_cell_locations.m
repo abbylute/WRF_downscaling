@@ -30,7 +30,7 @@ infine(intexf==1) = 0;
 figure(1);clf; fig = gcf; fig.PaperUnits = 'inches';
 fig.PaperPosition = [0 0 12 12];
 ax1 = usamap(latlim, lonlim);
-plotm(latf(infine),lonf(infine),'.','MarkerSize',.001);
+plotm(latf(infine),lonf(infine),'.','MarkerSize',.00001);
 plotm(lat,lon,'k','linewidth',1.6);
 gridm off
 print('/Volumes/WDPassport/DATA/WRF/Downscaled/fine_cell_coverage.png','-dpng','-r400');      
