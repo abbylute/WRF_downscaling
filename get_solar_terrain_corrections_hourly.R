@@ -222,7 +222,7 @@ stts = seq(1,24,outTR)
 ents = seq(4,24,outTR)
 newtc <- array(rep(NaN, nsites*12*(24/outTR)), c(nsites, 12, (24/outTR)));   # site, month, hour
 
-for (ss in 1:size(solar_tc,1)){
+for (ss in 1:dim(solar_tc)[1]){
   for (mm in 1:12){
     for (ttt in 1:nt){
       st <- stts[ttt]
