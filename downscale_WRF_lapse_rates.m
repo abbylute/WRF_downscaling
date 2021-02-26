@@ -265,10 +265,10 @@ disp(['running ACSWDNB took ',num2str(vtoc/60),' minutes.']);
 % %     
 % %     
 %% Downscale LW, PPT, Q2, WIND
-% r1 = 110;
-% r2 = 609;
-% c1 = 255;
-% c2 = 860;
+r1 = 110;
+r2 = 609;
+c1 = 255;
+c2 = 860;
 
 % for vv = 1:length(varnms)
 %         vartime = tic;
@@ -489,7 +489,7 @@ disp(['running ACSWDNB took ',num2str(vtoc/60),' minutes.']);
 %         
 %             
 %         if vv==3 % Q2
-%             datdown(datdown < 0.00005) = 0.00005;
+%             datdown(datdown < 0.00001) = 0.00001;
 %         elseif ismember(vv, [1,2,4]) % LW, PPT or WIND
 %             datdown(datdown<0)=0;
 %         end
@@ -503,7 +503,7 @@ disp(['running ACSWDNB took ',num2str(vtoc/60),' minutes.']);
 %         if ismember(vv, [2,4]) % for ppt, wind
 %             datdown = round(datdown, 1); % to the 10th
 %         elseif ismember(vv,3) % for q2
-%             datdown = round(datdown,4); % round to 10th of a gram/kg
+%             datdown = round(datdown,5); % round to 100th of a gram/kg
 %         elseif ismember(vv,1) % for longwave
 %             datdown = round(datdown, 5, 'significant'); % 5 sig figs
 %         end
