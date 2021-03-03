@@ -21,10 +21,7 @@ function[] = downscale_WRF_solar(ch, tcfilename, wrfhdir, solar_outTR, finaloutT
     
     % tc has terrain corrections for the 15th day of every month (1 to 12)
     % at every outTR hour
-    % shift tc months (jan-dec) to match cal (oct-sep)
     nt = 24/outTR; % # of time steps per day (month)
-    %tc = [tc(:,(size(tc,2)-(nt*3)+1):size(tc,2)) tc(:,1:(nt*9))];
-    %%%%tc = [tc(:,10:12,:) tc(:,1:9,:)];
     
     % set NaN's to 1, since this will create a terrain correction of 1 = no
     % change
@@ -33,36 +30,6 @@ function[] = downscale_WRF_solar(ch, tcfilename, wrfhdir, solar_outTR, finaloutT
     tc(tc > 5) = 5;
     tc(tc < .1) = .1;
     
-    % reshape tc
-    %tc = reshape(tc, nsites, size(tc,2)/nt, nt); % sites, month/day, hour
-    
-     
-    % interpolate each hour from mid-month days to all days of the year
-    %tcint = single(ones(nsites, size(cal,1)/nt, nt)) * NaN; % site, day, hour
-    %dailycal =unique(cal(:,1:3),'rows');
-    %for hr = 1:nt
-        % interpolate over extended calendar to avoid end effects
-       %dat = outernestedfunction(nsites,cal,nt,dailycal,tc,hr); % try using nested functions to save memory. Not 
-       % sure if avoiding copies of dat helps though because we have to
-       % duplicate tc (by passing it to the function).
-       
-    %       dat = single(ones(nsites,(size(cal,1)/nt+30)))*NaN;
-    %       f = find(dailycal(:,3) == 15);% &  cal(:,4) == (hr-1));
-
-    %       dat(:,f+15) = repmat(tc(:,:,hr),1,13); % 13 = # years
-    %       dat(:,1) = tc(:,end,hr);
-    %       dat(:,end) = tc(:,1,hr);
-    %       dat = fillmissing(dat,'spline',2);
-
-    %   tcint(:,:,hr) = dat(:, 16:(end-15));      
-    %end
-    %clear tc dailycal hr f dat
-        
-    % reshape terrain corrections to match cal
-    %tcint = reshape(permute(tcint, [1,3,2]), nsites, 4748*nt); % sites, time
-    
-    % preallocate downscaled data
-    %datdown = single(ones(size(tcint)))*NaN; % sites x time
     
     % roughly trim wrf lon/lat to chunk:
     wrflonsub = wrflon(wrfminrow:wrfmaxrow, wrfmincol:wrfmaxcol, :);
@@ -70,11 +37,6 @@ function[] = downscale_WRF_solar(ch, tcfilename, wrfhdir, solar_outTR, finaloutT
     wrflonsub = reshape(wrflonsub, size(wrflonsub,1)*size(wrflonsub,2),1);
     wrflatsub = reshape(wrflatsub, size(wrflatsub,1)*size(wrflatsub,2),1);
 
-    % find wrf cells that are closest to each point of interest
-    %dists = pdist2(single([outlon outlat]), single([wrflonsub wrflatsub]));
-    %for dd=1:size(dists,1) 
-    %    fsm(dd) = find(dists(dd,:) == min(dists(dd,:)));
-    %end
     
     for yy = 1:14
         ymdh = int16(find(cal(:,1) == yrs(yy)));
@@ -103,6 +65,7 @@ function[] = downscale_WRF_solar(ch, tcfilename, wrfhdir, solar_outTR, finaloutT
         % reshape terrain corrections to match cal
         tcint = reshape(permute(tcint, [1,3,2]), nsites, size(ymdh,1)); % sites, time
 
+        % load raw WRF solar data
         filenm = [wrfhdir,era,'/',char(varnm),'/',char(varnm),'_',era,'_trimmed_',num2str(outTR),'hr_',num2str(yrs(yy)),'.mat'];
         datall = matfile(filenm);
         datall = single(datall.outdata(wrfminrow:wrfmaxrow, wrfmincol:wrfmaxcol,:));
