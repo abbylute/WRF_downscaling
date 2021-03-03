@@ -1,8 +1,9 @@
-function[] = downscale_WRF_solar(ch, tcfilename, wrfhdir, outTR, outSR, era, ...
+function[] = downscale_WRF_solar(ch, tcfilename, wrfhdir, solar_outTR, finaloutTR, outSR, era, ...
     wrflon, wrflat, wrfminrow, wrfmaxrow, wrfmincol, wrfmaxcol, ...
     outlon, outlat, outdir, xoutc, youtc, xout, yout)
 
-
+    outTR = solar_outTR;
+    
     varnm = 'ACSWDNB';
     
     % create file to save to
@@ -11,7 +12,8 @@ function[] = downscale_WRF_solar(ch, tcfilename, wrfhdir, outTR, outSR, era, ...
     % set up cal
     cal = int16(datevec(datetime(2000,10,1,0,0,0):hours(outTR):datetime(2013,9,30,23,0,0)));
     yrs = unique(cal(:,1));
-    
+    calout = int16(datevec(datetime(2000,10,1,0,0,0):hours(finaloutTR):datetime(2013,9,30,23,0,0)));
+
     % load terrain corrections:
     tc = matfile(tcfilename);
     tc = single(tc.solar_tc);
@@ -76,6 +78,7 @@ function[] = downscale_WRF_solar(ch, tcfilename, wrfhdir, outTR, outSR, era, ...
     
     for yy = 1:14
         ymdh = int16(find(cal(:,1) == yrs(yy)));
+        ymdhout = int16(find(calout(:,1) == yrs(yy)));
         
         % interpolate each hour from mid-month days to all days of the year
         tcint = single(ones(nsites, size(ymdh,1)/nt, nt)) * NaN; % site, day, hour
@@ -83,12 +86,8 @@ function[] = downscale_WRF_solar(ch, tcfilename, wrfhdir, outTR, outSR, era, ...
         mos_in_yy = unique(cal(ymdh,2));
         mos_ext_end = mos_in_yy(end)+1; mos_ext_end(mos_ext_end==13) =1;
         mos_ext_st = mos_in_yy(1)-1; mos_ext_st(mos_ext_st==0) = 12;
+        
         for hr = 1:nt
-            % interpolate over extended calendar to avoid end effects
-           %dat = outernestedfunction(nsites,cal,nt,dailycal,tc,hr); % try using nested functions to save memory. Not 
-           % sure if avoiding copies of dat helps though because we have to
-           % duplicate tc (by passing it to the function).
-
                dat = single(ones(nsites,(size(ymdh,1)/nt+30)))*NaN;
                f = find(dailycal(:,3) == 15);% &  cal(:,4) == (hr-1));
 
@@ -103,9 +102,6 @@ function[] = downscale_WRF_solar(ch, tcfilename, wrfhdir, outTR, outSR, era, ...
         
         % reshape terrain corrections to match cal
         tcint = reshape(permute(tcint, [1,3,2]), nsites, size(ymdh,1)); % sites, time
-
-        % preallocate downscaled data
-        %datdown = single(ones(nsites,size(ymdh,1)))*NaN; % sites x time
 
         filenm = [wrfhdir,era,'/',char(varnm),'/',char(varnm),'_',era,'_trimmed_',num2str(outTR),'hr_',num2str(yrs(yy)),'.mat'];
         datall = matfile(filenm);
@@ -130,47 +126,18 @@ function[] = downscale_WRF_solar(ch, tcfilename, wrfhdir, outTR, outSR, era, ...
         clear dat_fine
         %figure(1);clf;scatter(wrflonsub(fsm),wrflatsub(fsm),45,datdown(:,1),'filled');colorbar();
 
+        % aggregate to desired temporal resolution
+        datdown = reshape(datdown,size(datdown,1),finaloutTR, size(datdown,2)/finaloutTR);
+        datdown = mean(datdown,2);
+        
         % round to desired precision
         datdown = round(datdown, 5, 'significant'); % 5 sig figs
         datdown(datdown < 0) = 0;
 
         % save downscaled data
-        m.datdown(1:nsites,ymdh) = datdown;
+        m.datdown(1:nsites,ymdhout) = datdown;
         
     end % end years
-    
-    %datdown = single(datdown);
-
-    % round to desired precision
-    %datdown = round(datdown, 5, 'significant'); % 5 sig figs
-    %datdown(datdown < 0) = 0;
-
-    % save downscaled data
-    %savetime = tic;
-    %save([outdir,era,'/',char(varnm),'/',char(varnm),'_',era,'_',num2str(outSR),'m_chunk',num2str(ch),'.mat'],'datdown','-v7.3');
-    %stoc = toc(savetime);
-    %disp(['saving ',char(varnm),' took ',num2str(stoc/60),' minutes.']);
 
 end % ACSWDNB
-
-
-%figure(1);clf;plot(dat); hold on; plot(varout(ymdh,ss));
-%figure(1);clf;plot(dat, varout(ymdh,ss),'.');
-
-%function[dat]= outernestedfunction(nsites,cal,nt,dailycal,tc,hr)
-%           dat = single(ones(nsites,(size(cal,1)/nt+30)))*NaN;%
-
-%           f = find(dailycal(:,3) == 15);% &  cal(:,4) == (hr-1));
-           
-%           innernestedfunction
-%           function innernestedfunction
-%               dat(:,f+15) = repmat(tc(:,:,hr),1,13); % 13 = # years
-%               dat(:,1) = tc(:,end,hr);
-%               dat(:,end) = tc(:,1,hr);
-%               dat = fillmissing(dat,'spline',2);
-%           end
-%end
-
-
-
 
