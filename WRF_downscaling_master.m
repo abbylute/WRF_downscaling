@@ -30,7 +30,7 @@ us_latlon = [mdir,'DATA/Mapping/US_latlon.mat']; % location of US latlon
 addpath([mdir,'DATA/WRF/downscaled/Code/'])
 %pathtoR = '/opt/modules/devel/R/3.6.0/lib64/R/bin/Rscript'; % location of R program on thunder. in R: file.path(R.home("bin"), "R")
 pathtoR = '/opt/modules/devel/R/3.5.1/lib64/R/bin/Rscript'; % location on tesla
-solartcRscript = [mdir,'DATA/WRF/downscaled/Code/get_solar_terrain_corrections_hourly.R']; % location of R solar terrain correction script
+solartcRscript = [mdir,'DATA/WRF/downscaled/Code/get_solar_terrain_corrections.R']; % location of R solar terrain correction script
 solarparamdir = [outdir,'solar_param_files/']; % file to store parameters temporarily for solar downscaling
 reggmttz = -7; % GMT timezone of the full domain
 
