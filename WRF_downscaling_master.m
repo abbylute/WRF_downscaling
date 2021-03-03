@@ -51,9 +51,9 @@ in_us = finechunks.in_us;
 nchunk = size(finechunks.st_col,2);
 clear finechunks
 ch_to_run = find(in_us>0);
-
-parfor chu = 1:sum(in_us)
-    ch = ch_to_run(chu);
+ch=45;
+%parfor chu = 1:sum(in_us)
+%    ch = ch_to_run(chu);
    %ch=42; %ch=291;%NCASC; %ch=62;%Olympics %ch=45;%GNP
     
     %if in_us(ch)==1 % if inside the us, skip this chunk
@@ -84,7 +84,7 @@ parfor chu = 1:sum(in_us)
         toc
     %end % if in us
 
-end
+%end
 
 
 
