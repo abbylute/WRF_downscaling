@@ -111,10 +111,11 @@ function[] = downscale_WRF_lapse_rates(ch, outSR, inDEM, outDEM, outDEMtif,...
 
 %% Downscale Solar
 vartime = tic;
-[paramfilename,tcfilename] = write_solar_paramfile(ch, inDEM, outSR, outDEMtif, outlon, outlat, outTR, era, solarparamdir, outdir, reggmttz);
+solar_outTR = 1;
+[paramfilename,tcfilename] = write_solar_paramfile(ch, inDEM, outSR, outDEMtif, outlon, outlat, solar_outTR, era, solarparamdir, outdir, reggmttz);
 system([pathtoR,' --vanilla ',solartcRscript,' ',paramfilename]);
 
- downscale_WRF_solar(ch, tcfilename, wrfhdir, outTR, outSR, era, ...
+ downscale_WRF_solar(ch, tcfilename, wrfhdir, solar_outTR, outSR, era, ...
      wrflon, wrflat, wrfminrow, wrfmaxrow, wrfmincol, wrfmaxcol, ...
      outlon, outlat, outdir, xoutc, youtc, xout, yout)
 clear paramfilename tcfilename
@@ -269,7 +270,7 @@ disp(['running ACSWDNB took ',num2str(vtoc/60),' minutes.']);
 % r2 = 609;
 % c1 = 255;
 % c2 = 860;
-
+% 
 % for vv = 1:length(varnms)
 %         vartime = tic;
 %         %--- Calculate monthly Lapse Rates for each WRF point in chunk domain ---%
@@ -521,7 +522,7 @@ disp(['running ACSWDNB took ',num2str(vtoc/60),' minutes.']);
 %     disp(['running ',char(varnms(vv)),' took ',num2str(vtoc/60),' minutes.']);
 % 
 % end % end variables   
-
+% 
 
 
 
