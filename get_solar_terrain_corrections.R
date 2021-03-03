@@ -102,7 +102,7 @@ day=15
 mlon = mean(pts_to_model[,1])
 mlat = mean(pts_to_model[,2])
 #ts = seq(0,23,deltat) # time steps each day in WRF time
-ts = seq(deltat/2, 23, deltat) # use midpoint of each timestep instead of start time
+ts = seq(deltat/2, 23.99, deltat) # use midpoint of each timestep instead of start time
 
 # translate wrf times to local times:
 tslocal = ts + reggmttz
@@ -136,20 +136,6 @@ for (mm in 1:12){
       solar_tc[, mm, tt] <- 1
     
     } else if (srs>day1[1] & srs<day1[2]) { # if hr is during daylight then run solar routine
-      if (day1[1,2]-srs < .5 & day1[1,2]-srs > 0){ # if timestep is half an hour or less before sunset
-        # then run the terrain corrections for half an hour earlier, and then average the 
-        # final ratios with all ones. This is to avoid crazy high correction values when
-        # the sun is really low.
-        srs = srs-.5
-        adj = T
-      } else if (srs-day1[1,1] < .5 & srs-day1[1,1] > 0){# if timestep is half an hour or less after sunrise
-        # then run the terrain corrections for half an hour later, and then average the
-        # final ratios with all ones.
-        srs = srs + .5
-        adj = T
-      } else {
-        adj = F # no adjustment
-      }
         
       hr_min = strsplit(as.character(srs),"\\.")
       hr = as.numeric(hr_min[[1]][1])
@@ -198,16 +184,12 @@ for (mm in 1:12){
       #Irrflat <- crop(Irrflat, extent(Irr))
       
       Ifnew <- disaggregate(Irrflat, 4000/demres, method = 'bilinear')
+      Ifnew <- focal(Ifnew, matrix(1,25,25), mean)#, pad = T, padValue )
       Ifnew[Ifnew<0] <- 0
       Ifnew <- crop(Ifnew, extent(Irr))
   
       # calculate ratio and assign it to output
       rat <- Irr/Ifnew
-      
-      # if adjustment is required, apply it here
-      if (adj == T){
-        values(rat) <- (values(rat) + 1)/2
-      }
       
       # transform back to lat lon
       rat <- projectRaster(rat, demorig)
