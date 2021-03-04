@@ -42,7 +42,7 @@ function[] = downscale_WRF_solar(ch, tcfilename, wrfhdir, solar_outTR, finaloutT
 
     for yy = 1:14
         ymdh = (find(cal(:,1) == yrs(yy)));
-        ymdhout = (find(calout(:,1) == yrs(yy)));
+        %ymdhout = (find(calout(:,1) == yrs(yy)));
         
         % interpolate each hour from mid-month days to all days of the year
         tcint = single(ones(nsites, size(ymdh,1)/nt, nt)) * NaN; % site, day, hour
@@ -71,42 +71,82 @@ function[] = downscale_WRF_solar(ch, tcfilename, wrfhdir, solar_outTR, finaloutT
         filenm = [wrfhdir,era,'/',char(varnm),'/',char(varnm),'_',era,'_trimmed_',num2str(outTR),'hr_',num2str(yrs(yy)),'.mat'];
         datall = matfile(filenm);
         
-        % run this over each temporal chunk to aggregate to (e.g. 4 hours)
-        for tt = 1:(length(ymdh)/finaloutTR)
-            st = finaloutTR*tt-3;
-            en = finaloutTR*tt;
-            
-            outdata = single(datall.outdata(wrfminrow:wrfmaxrow, wrfmincol:wrfmaxcol,st:en));
-            outdata = reshape(outdata, size(outdata,1)*size(outdata,2),size(outdata,3));
-            
-            dat_fine = ones(size(xout,1),size(outdata,2)).*NaN;
-            for ti = 1:finaloutTR
+        mos_in_yr = unique(cal(ymdh,2));
+        
+        for mo_ct = 1:length(mos_in_yr)
+           picks_full = find(calout(:,1)==yrs(yy) & calout(:,2) == mos_in_yr(mo_ct));
+           picks_in_yr = find(cal(ymdh,2) == mos_in_yr(mo_ct));
+           st = picks_in_yr(1);
+           en = picks_in_yr(end);
+           
+           outdata = single(datall.outdata(wrfminrow:wrfmaxrow, wrfmincol:wrfmaxcol,st:en));
+           outdata = reshape(outdata, size(outdata,1)*size(outdata,2),size(outdata,3));
+
+           dat_fine = ones(size(xout,1),size(outdata,2)).*NaN;
+           for ti = 1:size(outdata,2)
                 F = scatteredInterpolant(double(wrflonsub), double(wrflatsub), double(outdata(:,ti)));
                 dat_f = F(double(xoutc),double(youtc)); 
                 dat_fine(:,ti) = interp2(xoutc, youtc, dat_f, xout,yout);
-            end
-            clear F dat_f outdata
-            
-            % extract points to model at
-            dat_fine = dat_fine(i,:); 
+           end
+           clear F dat_f outdata
 
-            % apply terrain correction
-            datdown = dat_fine .* tcint(:,st:en);
-            clear dat_fine
-            %figure(1);clf;scatter(wrflonsub(fsm),wrflatsub(fsm),45,datdown(:,1),'filled');colorbar();
+           % extract points to model at
+           dat_fine = dat_fine(i,:); 
 
-            % aggregate to desired temporal resolution
-            datdown = sum(datdown,2);
+           % apply terrain correction
+           datdown = dat_fine .* tcint(:,st:en);
+           clear dat_fine
+           %figure(1);clf;scatter(wrflonsub(fsm),wrflatsub(fsm),45,datdown(:,1),'filled');colorbar();
+         
+           % aggregate to desired temporal resolution
+           datdown = reshape(datdown,size(datdown,1),finaloutTR,size(datdown,2)/finaloutTR);
+           datdown = squeeze(sum(datdown,2));
 
-            % round to desired precision
-            datdown = round(datdown, 5, 'significant'); % 5 sig figs
-            datdown(datdown < 0) = 0;
+           % round to desired precision
+           datdown = round(datdown, 5, 'significant'); % 5 sig figs
+           datdown(datdown < 0) = 0;
 
-            % save downscaled data
-            m.datdown(1:nsites,ymdhout(tt)) = datdown;
+           % save downscaled data
+           m.datdown(1:nsites,picks_full) = datdown;
 
         end
         
+%         % run this over each temporal chunk to aggregate to (e.g. 4 hours)
+%         for tt = 1:(length(ymdh)/finaloutTR)
+%             st = finaloutTR*tt-3;
+%             en = finaloutTR*tt;
+%             
+%             outdata = single(datall.outdata(wrfminrow:wrfmaxrow, wrfmincol:wrfmaxcol,st:en));
+%             outdata = reshape(outdata, size(outdata,1)*size(outdata,2),size(outdata,3));
+%             
+%             dat_fine = ones(size(xout,1),size(outdata,2)).*NaN;
+%             for ti = 1:finaloutTR
+%                 F = scatteredInterpolant(double(wrflonsub), double(wrflatsub), double(outdata(:,ti)));
+%                 dat_f = F(double(xoutc),double(youtc)); 
+%                 dat_fine(:,ti) = interp2(xoutc, youtc, dat_f, xout,yout);
+%             end
+%             clear F dat_f outdata
+%             
+%             % extract points to model at
+%             dat_fine = dat_fine(i,:); 
+% 
+%             % apply terrain correction
+%             datdown = dat_fine .* tcint(:,st:en);
+%             clear dat_fine
+%             %figure(1);clf;scatter(wrflonsub(fsm),wrflatsub(fsm),45,datdown(:,1),'filled');colorbar();
+% 
+%             % aggregate to desired temporal resolution
+%             datdown = sum(datdown,2);
+% 
+%             % round to desired precision
+%             datdown = round(datdown, 5, 'significant'); % 5 sig figs
+%             datdown(datdown < 0) = 0;
+% 
+%             % save downscaled data
+%             m.datdown(1:nsites,ymdhout(tt)) = datdown;
+% 
+%         end
+%         
         
 %         datall = single(datall.outdata(wrfminrow:wrfmaxrow, wrfmincol:wrfmaxcol,:));
 %         datall = reshape(datall, size(datall,1)*size(datall,2),size(datall,3));
