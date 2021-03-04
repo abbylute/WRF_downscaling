@@ -50,6 +50,12 @@ outfn = params$outfile[1,1] # output filename
 outgmttz = params$finalGMTtz[1,1] # time zone GMT of output (of WRF data)
 reggmttz = params$regionGMTtz[1,1] # time zone GMT of full modeling domain
 
+if (mean(outlon) < -115){
+  reggmttz <- -8
+} else {
+  reggmttz <- -7
+}
+
 tmz = reggmttz
 
 pts_to_model = matrix(c(outlon, outlat), ncol = 2); # lon and lat to save corrections at
@@ -102,7 +108,7 @@ day=15
 mlon = mean(pts_to_model[,1])
 mlat = mean(pts_to_model[,2])
 #ts = seq(0,23,deltat) # time steps each day in WRF time
-ts = seq(deltat/2, 23.99, deltat) # use midpoint of each timestep instead of start time
+ts = seq(0, 23.99, deltat) # WRF solar is instantaneous, so use the start of each timestep
 
 # translate wrf times to local times:
 tslocal = ts + reggmttz
