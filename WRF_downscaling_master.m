@@ -52,8 +52,8 @@ nchunk = size(finechunks.st_col,2);
 clear finechunks
 ch_to_run = find(in_us>0);
 
-%parfor chu = 1:sum(in_us)
-ch=45;%    ch = ch_to_run(chu);
+parfor chu = 1:sum(in_us)
+    ch = ch_to_run(chu);
    %ch=42; %ch=291;%NCASC; %ch=62;%Olympics %ch=45;%GNP
     
         % define where to model at what resolution
@@ -80,7 +80,7 @@ ch=45;%    ch = ch_to_run(chu);
             warning(['chunk ',num2str(ch),' did not have any points to downscale'])
         end
         toc
-%end
+end
 
 
 
