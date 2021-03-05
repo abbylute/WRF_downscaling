@@ -40,32 +40,61 @@ function[] = downscale_WRF_solar(ch, tcfilename, wrfhdir, solar_outTR, finaloutT
     % define points to model at
     [~,i] = ismember([outlon,outlat], [xout,yout], 'rows');
 
+    % interpolate each hour from mid-month days to all days of the year
+    % to create an interpolation that works for all years, use a year with
+    % 366 days
+    ymdh = (find(cal(:,1) == 2004));
+    tccal = cal(ymdh,:);
+    tcint = single(ones(nsites, size(ymdh,1)/nt, nt)) * NaN; % site, day, hour
+    dailycal =unique(cal(ymdh,1:3),'rows');
+    mos_in_yy = unique(cal(ymdh,2));
+    mos_ext_end = mos_in_yy(end)+1; mos_ext_end(mos_ext_end==13) =1;
+    mos_ext_st = mos_in_yy(1)-1; mos_ext_st(mos_ext_st==0) = 12;
+    tic
+    for hr = 1:nt
+           dat = single(ones(nsites,(size(ymdh,1)/nt+30)))*NaN;
+           f = find(dailycal(:,3) == 15);% &  cal(:,4) == (hr-1));
+
+           dat(:,f+15) = tc(:,mos_in_yy,hr);%repmat(tc(:,:,hr),1,13); % 13 = # years
+           dat(:,1) = tc(:,mos_ext_st,hr);
+           dat(:,end) = tc(:,mos_ext_end,hr);
+           dat = fillmissing(dat,'spline',2);
+
+       tcint(:,:,hr) = dat(:, 16:(end-15));      
+    end
+    clear dailycal hr f dat mos_in_yy mos_ext_end mos_ext_st
+    toc
+    % reshape terrain corrections to match cal
+    tcint = reshape(permute(tcint, [1,3,2]), nsites, size(ymdh,1)); % sites, time
+
+
+    
     for yy = 1:14
         ymdh = (find(cal(:,1) == yrs(yy)));
         %ymdhout = (find(calout(:,1) == yrs(yy)));
         
-        % interpolate each hour from mid-month days to all days of the year
-        tcint = single(ones(nsites, size(ymdh,1)/nt, nt)) * NaN; % site, day, hour
-        dailycal =unique(cal(ymdh,1:3),'rows');
-        mos_in_yy = unique(cal(ymdh,2));
-        mos_ext_end = mos_in_yy(end)+1; mos_ext_end(mos_ext_end==13) =1;
-        mos_ext_st = mos_in_yy(1)-1; mos_ext_st(mos_ext_st==0) = 12;
-        
-        for hr = 1:nt
-               dat = single(ones(nsites,(size(ymdh,1)/nt+30)))*NaN;
-               f = find(dailycal(:,3) == 15);% &  cal(:,4) == (hr-1));
-
-               dat(:,f+15) = tc(:,mos_in_yy,hr);%repmat(tc(:,:,hr),1,13); % 13 = # years
-               dat(:,1) = tc(:,mos_ext_st,hr);
-               dat(:,end) = tc(:,mos_ext_end,hr);
-               dat = fillmissing(dat,'spline',2);
-
-           tcint(:,:,hr) = dat(:, 16:(end-15));      
-        end
-        clear dailycal hr f dat mos_in_yy mos_ext_end mos_ext_st
-        
-        % reshape terrain corrections to match cal
-        tcint = reshape(permute(tcint, [1,3,2]), nsites, size(ymdh,1)); % sites, time
+%         % interpolate each hour from mid-month days to all days of the year
+%         tcint = single(ones(nsites, size(ymdh,1)/nt, nt)) * NaN; % site, day, hour
+%         dailycal =unique(cal(ymdh,1:3),'rows');
+%         mos_in_yy = unique(cal(ymdh,2));
+%         mos_ext_end = mos_in_yy(end)+1; mos_ext_end(mos_ext_end==13) =1;
+%         mos_ext_st = mos_in_yy(1)-1; mos_ext_st(mos_ext_st==0) = 12;
+%         tic
+%         for hr = 1:nt
+%                dat = single(ones(nsites,(size(ymdh,1)/nt+30)))*NaN;
+%                f = find(dailycal(:,3) == 15);% &  cal(:,4) == (hr-1));
+% 
+%                dat(:,f+15) = tc(:,mos_in_yy,hr);%repmat(tc(:,:,hr),1,13); % 13 = # years
+%                dat(:,1) = tc(:,mos_ext_st,hr);
+%                dat(:,end) = tc(:,mos_ext_end,hr);
+%                dat = fillmissing(dat,'spline',2);
+% 
+%            tcint(:,:,hr) = dat(:, 16:(end-15));      
+%         end
+%         clear dailycal hr f dat mos_in_yy mos_ext_end mos_ext_st
+%         toc
+%         % reshape terrain corrections to match cal
+%         tcint = reshape(permute(tcint, [1,3,2]), nsites, size(ymdh,1)); % sites, time
 
         % load raw WRF solar data
         filenm = [wrfhdir,era,'/',char(varnm),'/',char(varnm),'_',era,'_trimmed_',num2str(outTR),'hr_',num2str(yrs(yy)),'.mat'];
@@ -76,6 +105,9 @@ function[] = downscale_WRF_solar(ch, tcfilename, wrfhdir, solar_outTR, finaloutT
         for mo_ct = 1:length(mos_in_yr)
            picks_full = find(calout(:,1)==yrs(yy) & calout(:,2) == mos_in_yr(mo_ct));
            picks_in_yr = find(cal(ymdh,2) == mos_in_yr(mo_ct));
+           month_cal = cal(ymdh(picks_in_yr),:);
+           picks_tc = ismember(tccal(:,2:4),month_cal(:,2:4),'rows');
+           %find(tccal(:,2)==month_cal(:,2) & tccal(:,3)==month_cal(:,3) & tccal(:,4)==month_cal(:,4));
            st = picks_in_yr(1);
            en = picks_in_yr(end);
            
@@ -94,7 +126,7 @@ function[] = downscale_WRF_solar(ch, tcfilename, wrfhdir, solar_outTR, finaloutT
            dat_fine = dat_fine(i,:); 
 
            % apply terrain correction
-           datdown = dat_fine .* tcint(:,st:en);
+           datdown = dat_fine .* tcint(:,picks_tc);%tcint(:,st:en);
            clear dat_fine
            %figure(1);clf;scatter(wrflonsub(fsm),wrflatsub(fsm),45,datdown(:,1),'filled');colorbar();
          
