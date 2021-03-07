@@ -132,8 +132,9 @@ function[] = downscale_WRF_solar(ch, tcfilename, wrfhdir, solar_outTR, finaloutT
          
            % aggregate to desired temporal resolution
            datdown = reshape(datdown,size(datdown,1),finaloutTR,size(datdown,2)/finaloutTR);
-           datdown = squeeze(sum(datdown,2));
-
+           %datdown = squeeze(sum(datdown,2)); % this fails when nsites =1
+           datdown = reshape(sum(datdown,2),size(datdown,1),size(datdown,3));
+           
            % round to desired precision
            datdown = round(datdown, 5, 'significant'); % 5 sig figs
            datdown(datdown < 0) = 0;
