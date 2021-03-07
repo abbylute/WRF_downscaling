@@ -49,11 +49,14 @@ finechunks = matfile([outdir,'chunks/chunk_coordinates_',num2str(outSRf),'m.mat'
 finechunks = finechunks.chunk_coords;
 in_us = finechunks.in_us;
 nchunk = size(finechunks.st_col,2);
-clear finechunks
+%clear finechunks
 ch_to_run = find(in_us>0);
 
-chdone = readtable('/Volumes/WDPassport/temp/chunks_done.txt');
-
+chdone = table2array(readtable('/mnt/ceph/alute/DATA/WRF/downscaled/WUS/CTRL/ACSWDNB/chunks_done.txt'));
+f = ismember(1:nchunk,chdone);
+ch_to_run = find(in_us>0 & ~f');
+nchunk = size(ch_to_run,1);
+in_us = in_us(~f);
 
 
 parfor chu = 1:sum(in_us)
