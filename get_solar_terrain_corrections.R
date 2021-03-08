@@ -108,7 +108,8 @@ day=15
 mlon = mean(pts_to_model[,1])
 mlat = mean(pts_to_model[,2])
 #ts = seq(0,23,deltat) # time steps each day in WRF time
-ts = seq(0, 23.99, deltat) # WRF solar is instantaneous, so use the start of each timestep
+#ts = seq(0, 23.99, deltat) 
+ts = seq((deltat/2), 23.99, deltat)-deltat # WRF solar is accumulated, over previous timestep
 
 # translate wrf times to local times:
 tslocal = ts + reggmttz
