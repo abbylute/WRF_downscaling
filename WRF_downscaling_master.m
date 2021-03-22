@@ -9,7 +9,7 @@ buffer = 16000; % size of buffer around each chunk (m)
     % buffer should allow > than (window-1)/2 WRF grid cells to be
     % available on all sides for lapse rate calculations
 window = 7; % number of WRF grid cells to use for lapse rate downscaling
-era = 'CTRL'; % time period
+era = 'PGW'; % time period
 elev_dif_thres = 50; % maximum elevation difference across outSRf resolution cells within each outSRc cell (m)
 solar_dif_thres = 10; % as above, but for solar radiation from matlab (%)
 
