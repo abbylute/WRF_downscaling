@@ -88,7 +88,7 @@ end
 
 % calculate percent deltas:
 dsradwrfp = dsradwrf./msw1;
-%figure(1);clf;scatter(loncen,latcen,100,dsradwrfp(:,1),'filled');colorbar();
+figure(1);clf;scatter(loncen,latcen,100,dsradwrfp(:,1),'filled');colorbar();
 %xlabel('lon');ylabel('lat');title('january fractional change in solar (ratio of delta to historical climatology)');
 
 
