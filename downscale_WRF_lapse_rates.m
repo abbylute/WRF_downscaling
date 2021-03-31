@@ -262,10 +262,18 @@ for vv = 1:2
 
         if vv==1
             mon = matfile([wrfmdir,char(varnms(vv)),'_',era,'.mat']);
-            mon = single(mon.lw_monthly(r1:r2,c1:c2,:));
+            if strcmp(era,'PGW')
+                mon = single(mon.out(r1:r2,c1:c2,:));
+            else
+                mon = single(mon.lw_monthly(r1:r2,c1:c2,:));
+            end
         elseif vv ==2
             wrfppt = matfile([wrfmdir,char(varnms(vv)),'_monthly_',era,'.mat']);
-            wrfppt = single(wrfppt.pr_monthly(r1:r2,c1:c2,:));
+            if strcmp(era,'PGW')
+               wrfppt = single(wrfppt.out(r1:r2,c1:c2,:));
+            else
+               wrfppt = single(wrfppt.pr_monthly(r1:r2,c1:c2,:));
+            end
             % Prep PRISM ppt
             prism = matfile(prismppt);
             plonlat = prism.lonlat;
@@ -304,10 +312,18 @@ for vv = 1:2
             clear wrfppt plonlat prism F mm good
         elseif vv == 3
             mon = matfile([wrfmdir,char(varnms(vv)),'_',era,'.mat']);
-            mon = single(squeeze(mon.QDATA(r1:r2,c1:c2,1,:)));
+            if strcmp(era,'PGW')
+                mon = single(mon.out(r1:r2,c1:c2,:));
+            else
+                mon = single(squeeze(mon.QDATA(r1:r2,c1:c2,1,:)));
+            end
         elseif vv == 4
             mon = matfile([wrfmdir,'vs_monthly_',era,'.mat']);
-            mon = single(mon.vs_monthly(r1:r2,c1:c2,:));
+            if strcmp(era,'PGW')
+                mon = single(mon.out(r1:r2,c1:c2,:));
+            else
+                mon = single(mon.vs_monthly(r1:r2,c1:c2,:));
+            end
         end
 
         % preallocate
@@ -524,7 +540,11 @@ end % end variables
 %     %datdown = ones(size(hilon,1), size(hilon,2), 1) * NaN;
 %    
 %     mon = matfile([wrfmdir,char(varnm),'_',era,'.mat']);
-%     mon = single(mon.psfc_monthly(r1:r2,c1:c2,:));
+%     if strcmp(era,'PGW')
+%       mon = single(mon.out(r1:r2,c1:c2,:));
+%     else
+%       mon = single(mon.psfc_monthly(r1:r2,c1:c2,:));
+%     end
 %     
 %     % temporal average:
 %     mon = mean(mon,3);
