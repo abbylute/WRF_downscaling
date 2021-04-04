@@ -254,7 +254,7 @@ r2 = 609;
 c1 = 255;
 c2 = 860;
 
-for vv = 2
+for vv = 3
 %for vv = 1:length(varnms)
         vartime = tic;
         %--- Calculate monthly Lapse Rates for each WRF point in chunk domain ---%
