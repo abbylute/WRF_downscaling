@@ -249,10 +249,10 @@ function[] = downscale_WRF_lapse_rates(ch, outSR, inDEM, outDEM, outDEMtif,...
 %     
 %     
 % Downscale LW, PPT, Q2, WIND
-% r1 = 110;
-% r2 = 609;
-% c1 = 255;
-% c2 = 860;
+r1 = 110;
+r2 = 609;
+c1 = 255;
+c2 = 860;
 % 
 % %for vv = 3
 % for vv = 1:length(varnms)
