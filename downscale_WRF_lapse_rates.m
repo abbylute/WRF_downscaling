@@ -110,18 +110,18 @@ function[] = downscale_WRF_lapse_rates(ch, outSR, inDEM, outDEM, outDEMtif,...
 % --- Downscale each variable ---%
 
 %% Downscale Solar
-% vartime = tic;
-% solar_outTR = 1;
-% [paramfilename,tcfilename] = write_solar_paramfile(ch, inDEM, outSR, outDEMtif, outlon, outlat, solar_outTR, era, solarparamdir, outdir, reggmttz);
-% system([pathtoR,' --vanilla ',solartcRscript,' ',paramfilename]);
-% 
-%  downscale_WRF_solar(ch, tcfilename, wrfhdir, solar_outTR, outTR, outSR, era, ...
-%      wrflon, wrflat, wrfminrow, wrfmaxrow, wrfmincol, wrfmaxcol, ...
-%      outlon, outlat, outdir, xoutc, youtc, xout, yout)
-% clear paramfilename tcfilename
-% 
-% vtoc = toc(vartime);
-% disp(['running ACSWDNB took ',num2str(vtoc/60),' minutes.']);
+vartime = tic;
+solar_outTR = 1;
+[paramfilename,tcfilename] = write_solar_paramfile(ch, inDEM, outSR, outDEMtif, outlon, outlat, solar_outTR, era, solarparamdir, outdir, reggmttz);
+system([pathtoR,' --vanilla ',solartcRscript,' ',paramfilename]);
+
+ downscale_WRF_solar(ch, tcfilename, wrfhdir, solar_outTR, outTR, outSR, era, ...
+     wrflon, wrflat, wrfminrow, wrfmaxrow, wrfmincol, wrfmaxcol, ...
+     outlon, outlat, outdir, xoutc, youtc, xout, yout)
+clear paramfilename tcfilename
+
+vtoc = toc(vartime);
+disp(['running ACSWDNB took ',num2str(vtoc/60),' minutes.']);
 
     
 %% Downscale temperature
@@ -533,97 +533,97 @@ c2 = 860;
 % extract points to model at
 % output should be points x 1 (no temporal variability)
 % 
-    varnm = 'PSFC';
-    vartime = tic;
-
-    % preallocate output
-    %datdown = ones(size(hilon,1), size(hilon,2), 1) * NaN;
-   
-    mon = matfile([wrfmdir,char(varnm),'_',era,'.mat']);
-    if strcmp(era,'PGW')
-      mon = single(mon.out(r1:r2,c1:c2,:));
-    else
-      mon = single(mon.psfc_monthly(r1:r2,c1:c2,:));
-    end
-    
-    % temporal average:
-    mon = mean(mon,3);
-      
-    % calculate lapse rates
-    lr = single(ones(nwrf, 1)) .* NaN;
-    for pp = 1:nwrf
-        [rowpicks, colpicks] = find(wrflon == wrflonl(fin(pp)) & wrflat == wrflatl(fin(pp)));
-        rowpicks = (rowpicks - side):(rowpicks + side);
-        rowpicks = rowpicks(rowpicks > 0 & rowpicks <= size(wrfelev,1));
-        colpicks = (colpicks - side):(colpicks + side);
-        colpicks = colpicks(colpicks > 0 & colpicks <= size(wrfelev,2));
-        ncell = length(rowpicks)*length(colpicks);
-
-        elev = wrfelev(rowpicks,colpicks);
-        land = wrfland(rowpicks,colpicks);
-        elev = reshape(elev, ncell, 1);
-        land = reshape(land, ncell, 1);
-        elev = elev(land==1);
-
-        dat = mon(rowpicks,colpicks,1);
-        dat = reshape(dat, ncell, 1);
-        dat = dat(land==1);
-        % calculate lapse rate and y intercept
-        [p,~,mu]=polyfit(elev,dat,1);
-        lr(pp,1) = p(1)/mu(2); % per m
-    end % end wrf points
-    clear rowpicks colpicks ncell dat elev land p mu
-    %figure(1);clf;scatter(wrflonl(fin),wrflatl(fin),25,lr(:,1),'filled');colorbar();
-
-    
-    %--- Interpolate lapse rates to high resolution ---%   
-    lr_fine = single(ones(size(hilon,1),size(hilon,2)))*NaN;
-    F = scatteredInterpolant(double([wrflonl(fin), wrflatl(fin)]), double(lr(:,1)));
-    lr_f = F(double(xoutc),double(youtc));
-    lr_f = interp2(xoutc, youtc, lr_f, xout, yout);           
-    %figure(2);clf; scatter(xout, yout, 24, lr_fine,'filled');colorbar();     
-    lr_fine(:,:) = reshape(lr_f, size(hilon));
-    clear F lr_f lr
-
-    % trim to chunk
-    montrim = ones(nwrf,1).*NaN;
-    for pp = 1:nwrf  
-        [rowpicks, colpicks] = find(wrflon == wrflonl(fin(pp)) & wrflat == wrflatl(fin(pp)));
-        montrim(pp,:) = mon(rowpicks,colpicks); % datlong
-    end
-    
-    % interpolate to output resolution:
-    F = scatteredInterpolant(double(wrflonl(fin)), double(wrflatl(fin)), double(montrim));
-    dat_f = F(double(xoutc),double(youtc));
-    dat_f = interp2(xoutc, youtc, dat_f, xout, yout);
-
-    dat_fine = single(reshape(dat_f, size(hilon)));
-    clear F dat_f
-    %datdown = single(datfine);
-    
-    % preallocate output
-    datdown = single(ones(size(hilon,1), size(hilon,2))) * NaN;
-
-    % apply bias and lapse rate corrections
-    datdown(:,:) = (lr_fine(:,:) .* (hielev-reshape(wrfelevfine,size(hielev)))) + dat_fine; %0.008 
-    clear dat_fine montrim
-
-
-    % extract points to model at
-    datdown = reshape(datdown, size(datdown,1)*size(datdown,2), 1);
-    [~,i] = ismember([outlon,outlat], [hilonl,hilatl], 'rows');
-    datdown = datdown(i,:); 
-        
-    % round to desired precision
-    datdown = round(datdown/100,1)*100; % round to 10th of hPa or mb
-    
-    % Save downscaled data
-    savetime = tic;
-    save([outdir,era,'/',char(varnm),'/',char(varnm),'_',era,'_',num2str(outSR),'m_chunk',num2str(ch),'.mat'],'datdown','-v7.3');
-    stoc = toc(savetime);
-    vtoc = toc(vartime);
-    disp(['running ',char(varnm),' took ',num2str(vtoc/60),' minutes.']);
-    disp(['saving ',char(varnm),' took ',num2str(stoc/60),' minutescd ../W.']);
+%     varnm = 'PSFC';
+%     vartime = tic;
+% 
+%     % preallocate output
+%     %datdown = ones(size(hilon,1), size(hilon,2), 1) * NaN;
+%    
+%     mon = matfile([wrfmdir,char(varnm),'_',era,'.mat']);
+%     if strcmp(era,'PGW')
+%       mon = single(mon.out(r1:r2,c1:c2,:));
+%     else
+%       mon = single(mon.psfc_monthly(r1:r2,c1:c2,:));
+%     end
+%     
+%     % temporal average:
+%     mon = mean(mon,3);
+%       
+%     % calculate lapse rates
+%     lr = single(ones(nwrf, 1)) .* NaN;
+%     for pp = 1:nwrf
+%         [rowpicks, colpicks] = find(wrflon == wrflonl(fin(pp)) & wrflat == wrflatl(fin(pp)));
+%         rowpicks = (rowpicks - side):(rowpicks + side);
+%         rowpicks = rowpicks(rowpicks > 0 & rowpicks <= size(wrfelev,1));
+%         colpicks = (colpicks - side):(colpicks + side);
+%         colpicks = colpicks(colpicks > 0 & colpicks <= size(wrfelev,2));
+%         ncell = length(rowpicks)*length(colpicks);
+% 
+%         elev = wrfelev(rowpicks,colpicks);
+%         land = wrfland(rowpicks,colpicks);
+%         elev = reshape(elev, ncell, 1);
+%         land = reshape(land, ncell, 1);
+%         elev = elev(land==1);
+% 
+%         dat = mon(rowpicks,colpicks,1);
+%         dat = reshape(dat, ncell, 1);
+%         dat = dat(land==1);
+%         % calculate lapse rate and y intercept
+%         [p,~,mu]=polyfit(elev,dat,1);
+%         lr(pp,1) = p(1)/mu(2); % per m
+%     end % end wrf points
+%     clear rowpicks colpicks ncell dat elev land p mu
+%     %figure(1);clf;scatter(wrflonl(fin),wrflatl(fin),25,lr(:,1),'filled');colorbar();
+% 
+%     
+%     %--- Interpolate lapse rates to high resolution ---%   
+%     lr_fine = single(ones(size(hilon,1),size(hilon,2)))*NaN;
+%     F = scatteredInterpolant(double([wrflonl(fin), wrflatl(fin)]), double(lr(:,1)));
+%     lr_f = F(double(xoutc),double(youtc));
+%     lr_f = interp2(xoutc, youtc, lr_f, xout, yout);           
+%     %figure(2);clf; scatter(xout, yout, 24, lr_fine,'filled');colorbar();     
+%     lr_fine(:,:) = reshape(lr_f, size(hilon));
+%     clear F lr_f lr
+% 
+%     % trim to chunk
+%     montrim = ones(nwrf,1).*NaN;
+%     for pp = 1:nwrf  
+%         [rowpicks, colpicks] = find(wrflon == wrflonl(fin(pp)) & wrflat == wrflatl(fin(pp)));
+%         montrim(pp,:) = mon(rowpicks,colpicks); % datlong
+%     end
+%     
+%     % interpolate to output resolution:
+%     F = scatteredInterpolant(double(wrflonl(fin)), double(wrflatl(fin)), double(montrim));
+%     dat_f = F(double(xoutc),double(youtc));
+%     dat_f = interp2(xoutc, youtc, dat_f, xout, yout);
+% 
+%     dat_fine = single(reshape(dat_f, size(hilon)));
+%     clear F dat_f
+%     %datdown = single(datfine);
+%     
+%     % preallocate output
+%     datdown = single(ones(size(hilon,1), size(hilon,2))) * NaN;
+% 
+%     % apply bias and lapse rate corrections
+%     datdown(:,:) = (lr_fine(:,:) .* (hielev-reshape(wrfelevfine,size(hielev)))) + dat_fine; %0.008 
+%     clear dat_fine montrim
+% 
+% 
+%     % extract points to model at
+%     datdown = reshape(datdown, size(datdown,1)*size(datdown,2), 1);
+%     [~,i] = ismember([outlon,outlat], [hilonl,hilatl], 'rows');
+%     datdown = datdown(i,:); 
+%         
+%     % round to desired precision
+%     datdown = round(datdown/100,1)*100; % round to 10th of hPa or mb
+%     
+%     % Save downscaled data
+%     savetime = tic;
+%     save([outdir,era,'/',char(varnm),'/',char(varnm),'_',era,'_',num2str(outSR),'m_chunk',num2str(ch),'.mat'],'datdown','-v7.3');
+%     stoc = toc(savetime);
+%     vtoc = toc(vartime);
+%     disp(['running ',char(varnm),' took ',num2str(vtoc/60),' minutes.']);
+%     disp(['saving ',char(varnm),' took ',num2str(stoc/60),' minutescd ../W.']);
 
 
 end % end function
