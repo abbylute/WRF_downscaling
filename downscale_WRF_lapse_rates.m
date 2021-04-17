@@ -528,10 +528,10 @@ end % end variables
 
     
 % Downscale PSFC    
-compute temporal average from monthly WRF for each location
-interpolate to output resolution
-extract points to model at
-output should be points x 1 (no temporal variability)
+%compute temporal average from monthly WRF for each location
+%interpolate to output resolution
+%extract points to model at
+%output should be points x 1 (no temporal variability)
 
     varnm = 'PSFC';
     vartime = tic;
